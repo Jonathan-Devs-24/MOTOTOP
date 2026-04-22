@@ -1,3 +1,5 @@
+# backend/mototop_api/settings.py
+import os
 from pathlib import Path
 from decouple import config
 
@@ -15,6 +17,8 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = []
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Application definition
 
