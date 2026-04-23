@@ -99,4 +99,149 @@ class ProveedorProducto(models.Model):
     def __str__(self):
         return f"{self.producto} - {self.proveedor}"
     
+# Pedido
+class Pedido(models.Model):
+
+    ORIGEN_CHOICES = [
+        ('web', 'Web'),
+        ('local', 'Local'),
+        ('mobile', 'Mobile'),
+    ]
+
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('confirmado', 'Confirmado'),
+        ('cancelado', 'Cancelado'),
+    ]
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    vendedor = models.ForeignKey(Vendedor, on_delete=models.SET_NULL, null=True, blank=True)
+
+    origen = models.CharField(max_length=20, choices=ORIGEN_CHOICES)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    observaciones = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Pedido #{self.id} - {self.cliente}"
+    
+
+# DetallePedido
+class DetallePedido(models.Model):
+
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.producto} x{self.cantidad}"
+
+
+# Compra
+class Compra(models.Model):
+
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('recibida', 'Recibida'),
+        ('cancelada', 'Cancelada'),
+    ]
+
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
+
+    fecha_compra = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"Compra #{self.id} - {self.proveedor}"
+    
+
+# DetalleCompra
+class DetalleCompra(models.Model):
+
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.producto} x{self.cantidad}"
+    
+# Factura
+class Factura(models.Model):
+
+    TIPO_CHOICES = [
+        ('A', 'Factura A'),
+        ('B', 'Factura B'),
+        ('C', 'Factura C'),
+    ]
+
+    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
+
+    tipo_comprobante = models.CharField(max_length=1, choices=TIPO_CHOICES)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    fecha_emision = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Factura #{self.id} - Pedido {self.pedido.id}"
+    
+# Pago
+class Pago(models.Model):
+
+    METODO_CHOICES = [
+        ('efectivo', 'Efectivo'),
+        ('transferencia', 'Transferencia'),
+        ('tarjeta', 'Tarjeta'),
+    ]
+
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('completado', 'Completado'),
+        ('fallido', 'Fallido'),
+    ]
+
+    factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='pagos')
+
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    metodo_pago = models.CharField(max_length=20, choices=METODO_CHOICES)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+
+    fecha_pago = models.DateTimeField(auto_now_add=True)
+    referencia = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"Pago #{self.id} - {self.factura}"
+    
+# Envio
+class Envio(models.Model):
+
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+    ]
+
+    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
+
+    empresa_transporte = models.CharField(max_length=100)
+    tracking_code = models.CharField(max_length=100, blank=True, null=True)
+
+    fecha_envio = models.DateTimeField(null=True, blank=True)
+    fecha_estimada = models.DateTimeField(null=True, blank=True)
+    fecha_entrega = models.DateTimeField(null=True, blank=True)
+
+    estado_envio = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+
+    def __str__(self):
+        return f"Envio Pedido {self.pedido.id}"
     
