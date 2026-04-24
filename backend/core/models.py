@@ -195,6 +195,17 @@ class Factura(models.Model):
     def __str__(self):
         return f"Factura #{self.id} - Pedido {self.pedido.id}"
     
+
+# DetalleFactura
+class DetalleFactura(models.Model):
+    factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    
 # Pago
 class Pago(models.Model):
 
@@ -226,10 +237,12 @@ class Pago(models.Model):
 class Envio(models.Model):
 
     ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
-        ('enviado', 'Enviado'),
-        ('entregado', 'Entregado'),
-    ]
+    ('recibido', 'Recibido'),
+    ('preparacion', 'En preparación'),
+    ('enviado', 'Enviado'),
+    ('entregado', 'Entregado'),
+    ('cancelado', 'Cancelado'),
+]
 
     pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
 
@@ -245,3 +258,17 @@ class Envio(models.Model):
     def __str__(self):
         return f"Envio Pedido {self.pedido.id}"
     
+
+class Promocion(models.Model):
+    nombre = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=50)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    
+    
+class ProductoPromocion(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    promocion = models.ForeignKey(Promocion, on_delete=models.CASCADE)
+
+    tipo_descuento = models.CharField(max_length=50)
+    valor_descuento = models.DecimalField(max_digits=10, decimal_places=2)
