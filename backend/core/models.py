@@ -114,11 +114,12 @@ class ProveedorProducto(models.Model):
 class Pedido(models.Model):
 
     ORIGEN_CHOICES = [
-        ('web', 'Web'),
-        ('local', 'Local'),
-        ('mobile', 'Mobile'),
+    ('web', 'Web'),
+    ('local', 'Local'),
+    ('mobile', 'Mobile'),
     ]
-
+    
+    
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
         ('confirmado', 'Confirmado'),
@@ -159,8 +160,9 @@ class Pedido(models.Model):
                     raise ValidationError(f"Stock insuficiente para {d.producto}")
 
             for d in self.detalles.all():
-                d.producto.stock = F('stock') - d.cantidad
-                d.producto.save()
+                Producto.objects.filter(id=d.producto.id).update(
+                    stock=F('stock') - d.cantidad
+                )
 
             self.estado = 'confirmado'
             self.save()
@@ -168,7 +170,6 @@ class Pedido(models.Model):
     def __str__(self):
         return f"Pedido #{self.id} - {self.cliente}"
     
-
 # DetallePedido
 class DetallePedido(models.Model):
 
@@ -188,7 +189,6 @@ class DetallePedido(models.Model):
 
     def __str__(self):
         return f"{self.producto} x{self.cantidad}"
-
 
 # Compra
 class Compra(models.Model):
@@ -224,15 +224,15 @@ class Compra(models.Model):
             raise ValidationError("No se puede recibir una compra cancelada")
 
         for d in self.detalles.all():
-            d.producto.stock += d.cantidad
-            d.producto.save()
+            Producto.objects.filter(id=d.producto.id).update(
+                stock=F('stock') + d.cantidad
+            )
 
         self.estado = 'recibida'
         self.save()
     
     def __str__(self):
         return f"Compra #{self.id} - {self.proveedor}"
-    
 
 # DetalleCompra
 class DetalleCompra(models.Model):
@@ -300,7 +300,6 @@ class Factura(models.Model):
     def __str__(self):
         return f"Factura #{self.id} - Pedido {self.pedido.id}"
     
-
 # DetalleFactura
 class DetalleFactura(models.Model):
     factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='detalles')
@@ -316,7 +315,9 @@ class DetalleFactura(models.Model):
         super().save(*args, **kwargs)
         if self.factura_id:
             self.factura.calcular_total()
-    
+
+    def __str__(self):
+        return f"Factura #{self.factura.id} - {self.producto} x{self.cantidad}"
     
 # Pago
 class Pago(models.Model):
@@ -347,14 +348,13 @@ class Pago(models.Model):
     
 # Envio
 class Envio(models.Model):
-
     ESTADO_CHOICES = [
-    ('recibido', 'Recibido'),
-    ('preparacion', 'En preparación'),
-    ('enviado', 'Enviado'),
-    ('entregado', 'Entregado'),
-    ('cancelado', 'Cancelado'),
-]
+        ('recibido', 'Recibido'),
+        ('preparacion', 'En preparación'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
 
     pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
 
@@ -381,7 +381,7 @@ class Envio(models.Model):
     def __str__(self):
         return f"Envio Pedido {self.pedido.id}"
     
-
+# Promoción
 class Promocion(models.Model):
     nombre = models.CharField(max_length=100)
     tipo = models.CharField(max_length=50)
@@ -395,7 +395,11 @@ class Promocion(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-    
+
+    def __str__(self):
+        return self.nombre
+
+# ProductoPromoción    
 class ProductoPromocion(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     promocion = models.ForeignKey(Promocion, on_delete=models.CASCADE)
@@ -407,5 +411,8 @@ class ProductoPromocion(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['producto', 'promocion'], name='unique_producto_promocion')
         ]
+
+    def __str__(self):
+        return f"{self.producto} - {self.promocion}"
         
         

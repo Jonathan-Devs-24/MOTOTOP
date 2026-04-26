@@ -1,15 +1,102 @@
 # backend/core/serializers.py
 from rest_framework import serializers
-from .models import *
+from .models import (
+    Zona, Cliente, Vendedor, Producto, Rubro, Proveedor,
+    RubroProducto, ProveedorProducto, Pedido, DetallePedido,
+    Compra, DetalleCompra, Factura, DetalleFactura, Pago,
+    Envio, Promocion, ProductoPromocion
+)
 from django.db import transaction
 
+class ProveedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Proveedor
+        fields = '__all__'
 
-# Producto Serializer
+
+class RubroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rubro
+        fields = '__all__'
+
+
+# PRODUCTO ======================================================
+
+# ProductoSerializer
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = '__all__'
-        
+       
+# Prodcuto READ  
+class ProductoReadSerializer(serializers.ModelSerializer):
+    proveedores = serializers.SerializerMethodField()
+    rubros = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Producto
+        fields = '__all__'
+
+    def get_proveedores(self, obj):
+        relaciones = ProveedorProducto.objects.filter(producto=obj)
+        proveedores = [rel.proveedor for rel in relaciones]
+        return ProveedorSerializer(proveedores, many=True).data
+
+    def get_rubros(self, obj):
+        relaciones = RubroProducto.objects.filter(producto=obj)
+        rubros = [rel.rubro for rel in relaciones]
+        return RubroSerializer(rubros, many=True).data
+   
+
+# Prodcuto WRITE
+class ProductoWriteSerializer(serializers.ModelSerializer):
+    
+    proveedores = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
+
+    rubros = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
+
+    class Meta:
+        model = Producto
+        fields = [
+            "id",
+            "nombre",
+            "stock",
+            "precio_base",
+            "img",
+            "proveedores",
+            "rubros",
+        ]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        proveedores_ids = validated_data.pop("proveedores", [])
+        rubros_ids = validated_data.pop("rubros", [])
+
+        producto = Producto.objects.create(**validated_data)
+
+        for prov_id in proveedores_ids:
+            ProveedorProducto.objects.create(
+                producto=producto,
+                proveedor_id=prov_id
+            )
+
+        for rubro_id in rubros_ids:
+            RubroProducto.objects.create(
+                producto=producto,
+                rubro_id=rubro_id
+            )
+
+        return producto
+   
+# CLIENTE ======================================================
 
 # Cliente Serializer     
 class ClienteSerializer(serializers.ModelSerializer):
@@ -17,6 +104,16 @@ class ClienteSerializer(serializers.ModelSerializer):
         model = Cliente
         fields = '__all__'
     
+
+# Vendedor Serializer
+class VendedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendedor
+        fields = ['id', 'nombre', 'apellido', 'telefono', 'comision', 'estado', 'zona', 'usuario']
+    
+
+# PEDIDO =====================================================
+
 # DetallePedido (escritura) Serializer sin información del producto  
 class DetallePedidoWriteSerializer(serializers.ModelSerializer):
     
@@ -36,9 +133,6 @@ class DetallePedidoReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = DetallePedido
         fields = ['id', 'producto', 'cantidad', 'precio_unitario', 'subtotal']
-   
-     
-# Pedido Serializer para escritura, que incluye detalles sin información del producto
 class PedidoWriteSerializer(serializers.ModelSerializer):
     detalles = DetallePedidoWriteSerializer(many=True, write_only=True)
 
@@ -48,9 +142,13 @@ class PedidoWriteSerializer(serializers.ModelSerializer):
         pedido = Pedido.objects.create(**validated_data)
 
         for detalle in detalles_data:
+            producto = detalle['producto']
+
             detalle_obj = DetallePedido(
                 pedido=pedido,
-                **detalle
+                producto=producto,
+                cantidad=detalle['cantidad'],
+                precio_unitario=producto.precio_base
             )
             detalle_obj.save()
 
@@ -58,13 +156,7 @@ class PedidoWriteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pedido
-        fields = ['cliente', 'vendedor', 'origen', 'detalles']
-
-# Vendedor Serializer
-class VendedorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vendedor
-        fields = ['id', 'nombre', 'apellido']
+        fields = ['id', 'producto', 'cantidad', 'precio_unitario', 'subtotal']
 
 # Pedido Serializer para lectura, que incluye detalles con información del producto y cliente con información completa
 class PedidoReadSerializer(serializers.ModelSerializer):
@@ -74,10 +166,9 @@ class PedidoReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pedido
-        fields = ['id', 'cliente', 'vendedor', 'fecha', 'estado', 'total', 'detalles']
-     
-        
-# FACTURA ____________________________________________________________    
+        fields = ['id', 'cliente', 'vendedor', 'fecha_pedido', 'estado', 'total', 'detalles']
+            
+# FACTURA ================================================================   
 class DetalleFacturaReadSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer()
 
@@ -90,25 +181,21 @@ class FacturaReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Factura
-        fields = ['id', 'pedido', 'fecha', 'total', 'detalles']
-        
-
-        
-        
+        fields = ['id', 'pedido', 'fecha_emision', 'total', 'detalles']
+             
 # Pago
 class PagoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pago
-        fields = ['factura', 'fecha', 'monto', 'estado']
+        fields = ['factura', 'fecha_pago', 'monto', 'metodo_pago', 'estado']
      
 # Envio   
 class EnvioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Envio
-        fields = ['pedido', 'estado', 'fecha_envio', 'fecha_entrega']
+        fields = ['pedido', 'estado_envio', 'fecha_envio', 'fecha_entrega']
         
-
-# COMPRA
+# COMPRA ====================================================
 
 # Detalle compra read
 class DetalleCompraReadSerializer(serializers.ModelSerializer):
@@ -130,7 +217,6 @@ class DetalleCompraWriteSerializer(serializers.ModelSerializer):
         model = DetalleCompra
         fields = ['producto', 'cantidad']
         
-
 # Compra Write
 class CompraWriteSerializer(serializers.ModelSerializer):
     detalles = DetalleCompraWriteSerializer(many=True, write_only=True)
@@ -159,5 +245,28 @@ class CompraReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Compra
-        fields = ['id', 'proveedor', 'fecha', 'estado', 'total', 'detalles']
+        fields = ['id', 'proveedor', 'fecha_compra', 'estado', 'total', 'detalles']
 
+# Zona Serializer
+class ZonaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Zona
+        fields = '__all__'
+
+# Promocion Serializer
+class PromocionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Promocion
+        fields = '__all__'
+
+# ProductoPromocion Serializer
+class ProductoPromocionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductoPromocion
+        fields = '__all__'
+
+# Factura Write Serializer
+class FacturaWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Factura
+        fields = '__all__'
