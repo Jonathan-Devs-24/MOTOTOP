@@ -80,6 +80,22 @@ class CompraViewSet(viewsets.ModelViewSet):
             return CompraReadSerializer
         return CompraWriteSerializer
 
+    @action(detail=True, methods=['post'])
+    def recibir(self, request, pk=None):
+        compra = self.get_object()
+
+        try:
+            compra.marcar_recibida()
+            return Response(
+                {"mensaje": "Compra recibida correctamente"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 # FacturaViewSet
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.all()
