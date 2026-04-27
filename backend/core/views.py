@@ -75,6 +75,11 @@ class CompraViewSet(viewsets.ModelViewSet):
     queryset = Compra.objects.all()
     serializer_class = CompraReadSerializer
 
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return CompraReadSerializer
+        return CompraWriteSerializer
+
 # FacturaViewSet
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.all()

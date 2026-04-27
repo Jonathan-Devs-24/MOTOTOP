@@ -95,6 +95,29 @@ class ProductoWriteSerializer(serializers.ModelSerializer):
             )
 
         return producto
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        proveedores_ids = validated_data.pop("proveedores", None)
+        rubros_ids = validated_data.pop("rubros", None)
+
+        if proveedores_ids is not None:
+            ProveedorProducto.objects.filter(producto=instance).delete()
+            for prov_id in proveedores_ids:
+                ProveedorProducto.objects.create(
+                    producto=instance,
+                    proveedor_id=prov_id
+                )
+
+        if rubros_ids is not None:
+            RubroProducto.objects.filter(producto=instance).delete()
+            for rubro_id in rubros_ids:
+                RubroProducto.objects.create(
+                    producto=instance,
+                    rubro_id=rubro_id
+                )
+
+        return super().update(instance, validated_data)
    
 # CLIENTE ======================================================
 
@@ -136,9 +159,17 @@ class DetallePedidoReadSerializer(serializers.ModelSerializer):
 class PedidoWriteSerializer(serializers.ModelSerializer):
     detalles = DetallePedidoWriteSerializer(many=True, write_only=True)
 
+    class Meta:
+        model = Pedido
+        fields = ['id', 'cliente', 'vendedor', 'origen', 'observaciones', 'detalles']
+        extra_kwargs = {
+            'vendedor': {'required': False, 'allow_null': True},
+            'observaciones': {'required': False, 'allow_blank': True, 'allow_null': True},
+        }
+
     @transaction.atomic
     def create(self, validated_data):
-        detalles_data = validated_data.pop('detalles')
+        detalles_data = validated_data.pop('detalles', [])
         pedido = Pedido.objects.create(**validated_data)
 
         for detalle in detalles_data:
@@ -153,10 +184,6 @@ class PedidoWriteSerializer(serializers.ModelSerializer):
             detalle_obj.save()
 
         return pedido
-    
-    class Meta:
-        model = Pedido
-        fields = ['id', 'producto', 'cantidad', 'precio_unitario', 'subtotal']
 
 # Pedido Serializer para lectura, que incluye detalles con información del producto y cliente con información completa
 class PedidoReadSerializer(serializers.ModelSerializer):
@@ -227,13 +254,16 @@ class CompraWriteSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        detalles_data = validated_data.pop('detalles')
+        detalles_data = validated_data.pop('detalles', [])
         compra = Compra.objects.create(**validated_data)
 
         for detalle in detalles_data:
+            producto = detalle['producto']
             detalle_obj = DetalleCompra(
                 compra=compra,
-                **detalle
+                producto=producto,
+                cantidad=detalle['cantidad'],
+                precio_unitario=producto.precio_base
             )
             detalle_obj.save()
 
