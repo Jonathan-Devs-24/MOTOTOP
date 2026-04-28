@@ -9,6 +9,9 @@ from .models import (
     Envio, Promocion, ProductoPromocion
 )
 from .serializers import *
+from django.contrib.auth.models import User
+
+
 class PedidoViewSet(viewsets.ModelViewSet):
 
     queryset = Pedido.objects.all()
@@ -99,7 +102,12 @@ class CompraViewSet(viewsets.ModelViewSet):
 # FacturaViewSet
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.all()
-    serializer_class = FacturaReadSerializer
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return FacturaReadSerializer
+        return FacturaWriteSerializer
+    
 
 # PagoViewSet
 class PagoViewSet(viewsets.ModelViewSet):
@@ -116,3 +124,8 @@ class PromocionViewSet(viewsets.ModelViewSet):
     queryset = Promocion.objects.all()
     serializer_class = PromocionSerializer
     
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserWriteSerializer

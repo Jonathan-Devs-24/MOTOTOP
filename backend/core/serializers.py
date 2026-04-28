@@ -7,6 +7,8 @@ from .models import (
     Envio, Promocion, ProductoPromocion
 )
 from django.db import transaction
+from django.db.models import Sum
+from django.contrib.auth.models import User
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -205,23 +207,58 @@ class DetalleFacturaReadSerializer(serializers.ModelSerializer):
         
 class FacturaReadSerializer(serializers.ModelSerializer):
     detalles = DetalleFacturaReadSerializer(many=True)
+    pagada = serializers.SerializerMethodField()
 
     class Meta:
         model = Factura
-        fields = ['id', 'pedido', 'fecha_emision', 'total', 'detalles']
+        fields = ['id', 'pedido', 'fecha_emision', 'total', 'detalles', 'pagada']
+
+    def get_pagada(self, obj):
+        return obj.esta_pagada()
              
 # Pago
 class PagoSerializer(serializers.ModelSerializer):
+
+    def validate(self, data):
+        factura = data['factura']
+        monto = data['monto']
+
+        if monto <= 0:
+            raise serializers.ValidationError("El monto debe ser mayor a 0")
+
+        total_pagado = factura.pagos.filter(estado='completado').aggregate(
+            total=Sum('monto')
+        )['total'] or 0
+
+        if total_pagado + monto > factura.total:
+            raise serializers.ValidationError("El pago excede el total de la factura")
+
+        return data
+
     class Meta:
         model = Pago
         fields = ['factura', 'fecha_pago', 'monto', 'metodo_pago', 'estado']
-     
+        
+    
 # Envio   
 class EnvioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Envio
-        fields = ['pedido', 'estado_envio', 'fecha_envio', 'fecha_entrega']
-        
+        fields = '__all__'
+        extra_kwargs = {
+            'pedido': {'required': False},
+            'empresa_transporte': {'required': False},
+        }
+
+    def validate(self, data):
+        pedido = data.get('pedido') or self.instance.pedido
+
+        if pedido.estado != 'confirmado':
+            raise serializers.ValidationError(
+                "No se puede crear/modificar envío sin pedido confirmado"
+            )
+
+        return data
 # COMPRA ====================================================
 
 # Detalle compra read
@@ -297,6 +334,40 @@ class ProductoPromocionSerializer(serializers.ModelSerializer):
 
 # Factura Write Serializer
 class FacturaWriteSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Factura
-        fields = '__all__'
+        fields = ['pedido', 'tipo_comprobante']
+
+    @transaction.atomic
+    def create(self, validated_data):
+        pedido = validated_data['pedido']
+
+        if pedido.estado != 'confirmado':
+            raise serializers.ValidationError("El pedido debe estar confirmado")
+
+        factura = Factura.objects.create(**validated_data, total=0)
+
+        for d in pedido.detalles.all():
+            DetalleFactura.objects.create(
+                factura=factura,
+                producto=d.producto,
+                cantidad=d.cantidad,
+                precio_unitario=d.precio_unitario,
+                subtotal=d.subtotal
+            )
+
+        factura.calcular_total()
+
+        return factura
+
+class UserWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)

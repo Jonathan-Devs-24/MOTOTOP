@@ -15,5 +15,6 @@ router.register(r'facturas', FacturaViewSet)
 router.register(r'pagos', PagoViewSet)
 router.register(r'envios', EnvioViewSet)
 router.register(r'promociones', PromocionViewSet)
+router.register(r'users', UserViewSet)
 
 urlpatterns = router.urls

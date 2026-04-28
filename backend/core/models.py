@@ -373,11 +373,6 @@ class Envio(models.Model):
             raise ValidationError("No se puede crear envío sin pedido confirmado")
     
     
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-    
-    
     def __str__(self):
         return f"Envio Pedido {self.pedido.id}"
     
