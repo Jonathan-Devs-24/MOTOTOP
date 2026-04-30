@@ -18,3 +18,4 @@ router.register(r'promociones', PromocionViewSet)
 router.register(r'users', UserViewSet)
 
 urlpatterns = router.urls
+

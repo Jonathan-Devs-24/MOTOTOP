@@ -123,9 +123,9 @@ class EnvioViewSet(viewsets.ModelViewSet):
 class PromocionViewSet(viewsets.ModelViewSet):
     queryset = Promocion.objects.all()
     serializer_class = PromocionSerializer
-    
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserWriteSerializer
+    
