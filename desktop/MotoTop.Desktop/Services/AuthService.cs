@@ -1,69 +1,80 @@
-// MotoTop.Desktop/Services/AuthService.cs
-using System;
+using System.Net.Http.Json;
 using System.Net.Http;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using MotoTop.Desktop.Models;
+
+namespace MotoTop.Desktop.Services;
 
 public class AuthService
 {
-    private readonly HttpClient _http;
-    private readonly JsonSerializerOptions _jsonOptions;
+    private readonly HttpClient _httpClient;
 
     public string? AccessToken { get; private set; }
     public string? RefreshToken { get; private set; }
 
     public AuthService()
     {
-        var baseUrl = Environment.GetEnvironmentVariable("MOTOTOP_API_URL")
-                      ?? "http://localhost:8000/";
-
-        _http = new HttpClient
+        _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(baseUrl)
-        };
-
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
+            BaseAddress = new Uri("http://localhost:8000") // Asumiendo que el backend corre en localhost:8000
         };
     }
 
-    public async Task<bool> Login(string username, string password)
+    public async Task<(LoginResponse? Response, string? ErrorMessage)> LoginAsync(LoginRequest request)
     {
-        var request = new LoginRequest
+        try
         {
-            username = username,
-            password = password
-        };
+            var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            });
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("/api/token/", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
 
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+            if (!response.IsSuccessStatusCode)
+            {
+                return (null, responseBody);
+            }
 
-        var response = await _http.PostAsync("api/token/", content);
-
-        if (!response.IsSuccessStatusCode)
-            return false;
-
-        var responseJson = await response.Content.ReadAsStringAsync();
-
-        var result = JsonSerializer.Deserialize<LoginResponse>(
-            responseJson,
-            _jsonOptions
-        );
-
-        AccessToken = result?.access;
-        RefreshToken = result?.refresh;
-
-        return AccessToken != null;
+            var result = JsonSerializer.Deserialize<LoginResponse>(responseBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            if (result != null)
+            {
+                AccessToken = result.Access;
+                RefreshToken = result.Refresh;
+            }
+            return (result, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            return (null, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return (null, ex.Message);
+        }
     }
 
-    public void AttachToken(HttpClient client)
+    public async Task<string?> RefreshTokenAsync(string refreshToken)
     {
-        if (AccessToken == null)
-            return;
-
-        client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/token/refresh/", new { refresh = refreshToken });
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+            return result?["access"];
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

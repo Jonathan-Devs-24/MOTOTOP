@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Jbw4NAW2I0M=",
+  "dgSpecHash": "BIS2CIokJ6U=",
   "success": true,
   "projectFilePath": "C:\\Users\\jonat\\MotoTop\\desktop\\MotoTop.Desktop\\MotoTop.Desktop.csproj",
   "expectedPackageFiles": [
@@ -38,11 +38,7 @@
     "C:\\Users\\jonat\\.nuget\\packages\\system.net.http.json\\10.0.7\\system.net.http.json.10.0.7.nupkg.sha512",
     "C:\\Users\\jonat\\.nuget\\packages\\system.text.encodings.web\\10.0.7\\system.text.encodings.web.10.0.7.nupkg.sha512",
     "C:\\Users\\jonat\\.nuget\\packages\\system.text.json\\10.0.7\\system.text.json.10.0.7.nupkg.sha512",
-    "C:\\Users\\jonat\\.nuget\\packages\\tmds.dbus.protocol\\0.92.0\\tmds.dbus.protocol.0.92.0.nupkg.sha512",
-    "C:\\Users\\jonat\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.22\\microsoft.netcore.app.ref.8.0.22.nupkg.sha512",
-    "C:\\Users\\jonat\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.22\\microsoft.windowsdesktop.app.ref.8.0.22.nupkg.sha512",
-    "C:\\Users\\jonat\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.22\\microsoft.aspnetcore.app.ref.8.0.22.nupkg.sha512",
-    "C:\\Users\\jonat\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.22\\microsoft.netcore.app.host.win-x64.8.0.22.nupkg.sha512"
+    "C:\\Users\\jonat\\.nuget\\packages\\tmds.dbus.protocol\\0.92.0\\tmds.dbus.protocol.0.92.0.nupkg.sha512"
   ],
   "logs": []
 }

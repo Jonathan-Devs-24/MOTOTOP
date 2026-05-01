@@ -86,7 +86,7 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.FileSystem.Watcher.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.IsolatedStorage.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.MemoryMappedFiles.dll
-C:\Users\jonat\.nuget\packages\system.io.pipelines\8.0.0\lib\net8.0\System.IO.Pipelines.dll
+C:\Users\jonat\.nuget\packages\system.io.pipelines\10.0.7\lib\net8.0\System.IO.Pipelines.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.Pipes.AccessControl.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.Pipes.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.IO.UnmanagedMemoryStream.dll
@@ -97,7 +97,7 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Memory.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.Http.dll
-C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.Http.Json.dll
+C:\Users\jonat\.nuget\packages\system.net.http.json\10.0.7\lib\net8.0\System.Net.Http.Json.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.HttpListener.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.Mail.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Net.NameResolution.dll
@@ -164,8 +164,8 @@ C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.Encoding.CodePages.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.Encoding.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.Encoding.Extensions.dll
-C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.Encodings.Web.dll
-C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.Json.dll
+C:\Users\jonat\.nuget\packages\system.text.encodings.web\10.0.7\lib\net8.0\System.Text.Encodings.Web.dll
+C:\Users\jonat\.nuget\packages\system.text.json\10.0.7\lib\net8.0\System.Text.Json.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Text.RegularExpressions.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Threading.Channels.dll
 C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.26\ref\net8.0\System.Threading.dll

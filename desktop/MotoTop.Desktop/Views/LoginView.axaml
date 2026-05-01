@@ -1,22 +1,98 @@
-<UserControl
-    x:Class="MotoTop.Desktop.Views.LoginView"
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MotoTop.Desktop.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+             x:Class="MotoTop.Desktop.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
 
-    <StackPanel Margin="20" Spacing="10">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#D51920" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#171717" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#1F1F1F" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#2E2E2E" />
+        <SolidColorBrush x:Key="TextBrush" Color="#F4F4F4" />
+        <SolidColorBrush x:Key="SubTextBrush" Color="#A2A2A2" />
+    </UserControl.Resources>
 
-        <TextBox
-            Watermark="Usuario"
-            Text="{Binding Username}" />
+    <Grid Background="#0F0F0F">
+        <Border Background="{StaticResource SurfaceBrush}"
+                CornerRadius="24"
+                Padding="32"
+                Width="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1">
 
-        <TextBox
-            Watermark="Password"
-            Text="{Binding Password}" />
+            <StackPanel Spacing="20">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="MotoTop"
+                               FontSize="30"
+                               FontWeight="Bold"
+                               Foreground="White" />
+                    <TextBlock Text="Inicia sesión para acceder al sistema"
+                               FontSize="14"
+                               Foreground="{StaticResource SubTextBrush}" />
+                </StackPanel>
 
-        <Button
-            Content="Login"
-            Command="{Binding LoginCommand}" />
+                <Border Background="{StaticResource PanelBrush}"
+                        CornerRadius="20"
+                        Padding="24"
+                        BorderBrush="#2A2A2A"
+                        BorderThickness="1">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Usuario"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}" />
+                        <TextBox Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 PlaceholderText="Nombre de usuario"
+                                 Background="#111111"
+                                 Foreground="White"
+                                 BorderBrush="{StaticResource BorderBrush}"
+                                 CornerRadius="10"
+                                 Padding="10" />
 
-    </StackPanel>
+                        <TextBlock Text="Contraseña"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}" />
+                        <TextBox Text="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 PasswordChar="*"
+                                 PlaceholderText="Contraseña"
+                                 Background="#111111"
+                                 Foreground="White"
+                                 BorderBrush="{StaticResource BorderBrush}"
+                                 CornerRadius="10"
+                                 Padding="10" />
 
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="#F25A5A"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" />
+
+                        <Button Content="Iniciar sesión"
+                                Command="{Binding LoginCommand}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Foreground="White"
+                                CornerRadius="10"
+                                Height="44"
+                                FontWeight="Bold"
+                                Padding="10"
+                                HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                    <TextBlock Text="¿Problemas para iniciar sesión?"
+                               Foreground="{StaticResource SubTextBrush}"
+                               FontSize="12" />
+                    <TextBlock Text="Contacta soporte"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               FontSize="12"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

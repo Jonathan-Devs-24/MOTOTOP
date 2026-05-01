@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using MotoTop.Desktop.ViewModels;
 using MotoTop.Desktop.Views;
+using MotoTop.Desktop.Services;
 
 namespace MotoTop.Desktop;
 
@@ -20,9 +21,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var authService = new AuthService();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new AppViewModel(authService),
             };
         }
 

@@ -92,3 +92,7 @@ C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\refint\MotoTop.D
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\MotoTop.Desktop.pdb
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\MotoTop.Desktop.genruntimeconfig.cache
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\ref\MotoTop.Desktop.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Net.Http.Json.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Encodings.Web.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Json.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
