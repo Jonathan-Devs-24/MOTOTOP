@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MotoTop.Desktop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+838feb49a5ce23d4bf4a7b373bbf84b8e12a3586")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7791aeab5d44821859458a61b892a46b34ffb9ea")]
 [assembly: System.Reflection.AssemblyProductAttribute("MotoTop.Desktop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MotoTop.Desktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

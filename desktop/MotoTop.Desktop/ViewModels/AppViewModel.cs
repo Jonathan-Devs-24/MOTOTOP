@@ -10,11 +10,16 @@ public partial class AppViewModel : ViewModelBase
     private readonly AuthService _authService;
 
     [ObservableProperty]
-    private ViewModelBase _currentViewModel;
+    private ViewModelBase _currentViewModel = null!;
 
     public AppViewModel(AuthService authService)
     {
         _authService = authService;
+        SetLoginView();
+    }
+
+    private void SetLoginView()
+    {
         var loginViewModel = new LoginViewModel(_authService);
         loginViewModel.LoginSuccess += OnLoginSuccess;
         CurrentViewModel = loginViewModel;
@@ -22,7 +27,13 @@ public partial class AppViewModel : ViewModelBase
 
     private void OnLoginSuccess(object? sender, EventArgs e)
     {
-        // Cambiar a la vista principal
-        CurrentViewModel = new MainWindowViewModel();
+        var mainViewModel = new MainWindowViewModel();
+        mainViewModel.LogoutRequested += OnLogoutRequested;
+        CurrentViewModel = mainViewModel;
+    }
+
+    private void OnLogoutRequested(object? sender, EventArgs e)
+    {
+        SetLoginView();
     }
 }

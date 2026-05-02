@@ -1,0 +1,317 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MotoTop.Desktop.ViewModels"
+             xmlns:models="using:MotoTop.Desktop.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="MotoTop.Desktop.Views.ProductManagementView"
+             x:DataType="vm:ProductManagementViewModel">
+
+    <Grid Background="#111111">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="16" Margin="16,16,16,16">
+            <TextBlock Text="Gestión de productos"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="White" />
+            <TextBlock Text="Crea rubros, proveedores, productos y promociones." 
+                       FontSize="14"
+                       Foreground="#A2A2A2"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <TabControl Grid.Row="1" Background="#171717" BorderThickness="0" SelectedIndex="0">
+            <TabItem Header="Productos">
+                <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Nuevo producto"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White" />
+
+                                <TextBlock Text="Nombre" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProductoNombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+
+                                <TextBlock Text="Precio base" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProductoPrecioBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+
+                                <TextBlock Text="Stock" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProductoStock, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+
+                                <TextBlock Text="Rubro" Foreground="#A2A2A2" />
+                                <ComboBox ItemsSource="{Binding Rubros}"
+                                          SelectedItem="{Binding SelectedRubroForProducto, Mode=TwoWay}"
+                                          Background="#111111"
+                                          Foreground="White"
+                                          CornerRadius="8"
+                                          Padding="10" />
+
+                                <TextBlock Text="Proveedor" Foreground="#A2A2A2" />
+                                <ComboBox ItemsSource="{Binding Proveedores}"
+                                          SelectedItem="{Binding SelectedProveedorForProducto, Mode=TwoWay}"
+                                          Background="#111111"
+                                          Foreground="White"
+                                          CornerRadius="8"
+                                          Padding="10" />
+
+                                <TextBlock Text="Promoción (opcional)" Foreground="#A2A2A2" />
+                                <ComboBox ItemsSource="{Binding Promociones}"
+                                          SelectedItem="{Binding SelectedPromocionForProducto, Mode=TwoWay}"
+                                          Background="#111111"
+                                          Foreground="White"
+                                          CornerRadius="8"
+                                          Padding="10" />
+
+                                <Button Content="Agregar producto"
+                                        Command="{Binding AddProductoCommand}"
+                                        Background="#D51920"
+                                        Foreground="White"
+                                        CornerRadius="10"
+                                        Height="42" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Productos creados"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           Margin="0,0,0,12" />
+                                <ListBox ItemsSource="{Binding Productos}"
+                                         Background="#171717"
+                                         BorderThickness="0"
+                                         Foreground="White">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ProductModel">
+                                        <Border Background="#111111" CornerRadius="12" Padding="12" Margin="0,0,0,10">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" Foreground="White" />
+                                                <TextBlock Text="{Binding PrecioBase, StringFormat='Precio: {0:C}'}" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding Stock, StringFormat='Stock: {0}'}" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding Rubro.Nombre, StringFormat='Rubro: {0}'}" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding Proveedor.Nombre, StringFormat='Proveedor: {0}'}" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding Promocion.Nombre, StringFormat='Promoción: {0}'}" Foreground="#A2A2A2" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Rubros">
+                <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Nuevo rubro"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White" />
+                                <TextBlock Text="Nombre" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewRubroNombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <Button Content="Agregar rubro"
+                                        Command="{Binding AddRubroCommand}"
+                                        Background="#D51920"
+                                        Foreground="White"
+                                        CornerRadius="10"
+                                        Height="42" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Rubros existentes"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           Margin="0,0,0,12" />
+                                <ListBox ItemsSource="{Binding Rubros}"
+                                         Background="#171717"
+                                         BorderThickness="0"
+                                         Foreground="White">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:RubroModel">
+                                            <TextBlock Text="{Binding Nombre}" Margin="0,0,0,8" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Proveedores">
+                <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Nuevo proveedor"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White" />
+                                <TextBlock Text="Nombre" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProveedorNombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <TextBlock Text="Teléfono" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProveedorTelefono, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <TextBlock Text="Email" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewProveedorEmail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <Button Content="Agregar proveedor"
+                                        Command="{Binding AddProveedorCommand}"
+                                        Background="#D51920"
+                                        Foreground="White"
+                                        CornerRadius="10"
+                                        Height="42" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Proveedores existentes"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           Margin="0,0,0,12" />
+                                <ListBox ItemsSource="{Binding Proveedores}"
+                                         Background="#171717"
+                                         BorderThickness="0"
+                                         Foreground="White">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:ProveedorModel">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Telefono}" FontSize="12" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding Email}" FontSize="12" Foreground="#A2A2A2" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Promociones">
+                <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Nueva promoción"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White" />
+                                <TextBlock Text="Nombre" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewPromocionNombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <TextBlock Text="Tipo" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewPromocionTipo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <TextBlock Text="Fecha inicio" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewPromocionInicio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <TextBlock Text="Fecha fin" Foreground="#A2A2A2" />
+                                <TextBox Text="{Binding NewPromocionFin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="#111111"
+                                         Foreground="White"
+                                         BorderBrush="#2E2E2E"
+                                         CornerRadius="8"
+                                         Padding="10" />
+                                <Button Content="Agregar promoción"
+                                        Command="{Binding AddPromocionCommand}"
+                                        Background="#D51920"
+                                        Foreground="White"
+                                        CornerRadius="10"
+                                        Height="42" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#1F1F1F" CornerRadius="16" Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Promociones existentes"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           Margin="0,0,0,12" />
+                                <ListBox ItemsSource="{Binding Promociones}"
+                                         Background="#171717"
+                                         BorderThickness="0"
+                                         Foreground="White">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:PromocionModel">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Tipo}" FontSize="12" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding FechaInicio}" FontSize="12" Foreground="#A2A2A2" />
+                                                <TextBlock Text="{Binding FechaFin}" FontSize="12" Foreground="#A2A2A2" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

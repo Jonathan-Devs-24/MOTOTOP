@@ -15,7 +15,34 @@
             <v:LoginView />
         </DataTemplate>
         <DataTemplate DataType="vm:MainWindowViewModel">
-            <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <v:MainView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ProductManagementViewModel">
+            <v:ProductManagementView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:SectionViewModel">
+            <Border Background="#111111" Padding="24" CornerRadius="20" BorderBrush="#262626" BorderThickness="1">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="26"
+                               FontWeight="Bold"
+                               Foreground="White" />
+                    <TextBlock Text="{Binding Description}"
+                               FontSize="14"
+                               Foreground="#A2A2A2"
+                               TextWrapping="Wrap" />
+                    <Border Background="#171717"
+                            CornerRadius="16"
+                            Padding="20"
+                            BorderBrush="#2A2A2A"
+                            BorderThickness="1">
+                        <TextBlock Text="{Binding Placeholder}"
+                                   FontSize="16"
+                                   Foreground="White"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Border>
         </DataTemplate>
     </Window.DataTemplates>
 

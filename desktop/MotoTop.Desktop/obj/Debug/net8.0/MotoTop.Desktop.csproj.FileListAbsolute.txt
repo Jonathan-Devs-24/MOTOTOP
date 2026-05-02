@@ -35,6 +35,9 @@ C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\Microsoft.Extens
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\Microsoft.IO.RecyclableMemoryStream.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\SkiaSharp.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.IO.Pipelines.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Net.Http.Json.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Encodings.Web.dll
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Json.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\Tmds.DBus.Protocol.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-arm64\native\av_libglesv2.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-x64\native\av_libglesv2.dll
@@ -78,6 +81,7 @@ C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-x64
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-x64\native\libSkiaSharp.pdb
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-x86\native\libSkiaSharp.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\win-x86\native\libSkiaSharp.pdb
+C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\MotoTop.Desktop.csproj.AssemblyReference.cache
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\Avalonia\Resources.Inputs.cache
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\Avalonia\resources
@@ -92,7 +96,3 @@ C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\refint\MotoTop.D
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\MotoTop.Desktop.pdb
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\MotoTop.Desktop.genruntimeconfig.cache
 C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\obj\Debug\net8.0\ref\MotoTop.Desktop.dll
-C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Net.Http.Json.dll
-C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Encodings.Web.dll
-C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\System.Text.Json.dll
-C:\Users\jonat\MotoTop\desktop\MotoTop.Desktop\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
