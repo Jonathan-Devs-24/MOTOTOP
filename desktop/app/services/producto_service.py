@@ -17,10 +17,14 @@ class ProductoService:
         response.raise_for_status()
         return response.json()
 
-    def actualizar(self, producto_id: int, data: dict):
-        response = self.http.put(f"productos/{producto_id}/", data)
-        response.raise_for_status()
-        return response.json()
+    def actualizar(self, producto_id, data, files=None):
+        r = self.http.put(
+            f"productos/{producto_id}/",
+            data=data,
+            files=files
+        )
+        r.raise_for_status()
+        return r.json()
 
     def eliminar(self, producto_id: int):
         response = self.http.delete(f"productos/{producto_id}/")

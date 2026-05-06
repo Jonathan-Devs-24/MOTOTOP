@@ -17,3 +17,5 @@ class ProveedorService:
     def eliminar(self, proveedor_id):
         r = self.http.delete(f"proveedores/{proveedor_id}/")
         r.raise_for_status()
+        
+    

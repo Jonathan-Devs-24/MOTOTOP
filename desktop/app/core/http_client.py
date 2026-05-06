@@ -58,3 +58,11 @@ class HttpClient:
                 json=data,
                 headers=self._headers()
             )
+            
+    def put(self, endpoint, data=None, files=None):
+        return requests.put(
+            f"{self.base_url}{endpoint}",
+            data=data,
+            files=files,
+            headers=self._headers_without_json()
+        )

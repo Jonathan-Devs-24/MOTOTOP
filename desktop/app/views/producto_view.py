@@ -1,12 +1,13 @@
 # desktop/app/views/producto_view.py
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton,
-    QTableWidget, QTableWidgetItem, QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QScrollArea, QGridLayout
 )
 
 from services.rubro_service import RubroService
 from services.proveedor_service import ProveedorService
 from views.producto_form import ProductoForm
+from views.producto_card import ProductoCard
 
 
 class ProductoView(QWidget):
@@ -24,7 +25,10 @@ class ProductoView(QWidget):
 
         layout = QVBoxLayout()
 
-        # Top bar
+        # =========================
+        # TOP BAR
+        # =========================
+
         top_bar = QHBoxLayout()
 
         self.btn_prev = QPushButton("Anterior")
@@ -34,30 +38,36 @@ class ProductoView(QWidget):
 
         self.lbl_page = QLabel("Página: 1")
 
-        # Agregar botones
         top_bar.addWidget(self.btn_new)
         top_bar.addWidget(self.btn_prev)
         top_bar.addWidget(self.btn_next)
         top_bar.addWidget(self.btn_refresh)
         top_bar.addWidget(self.lbl_page)
 
-        # Conexiones (DESPUÉS de crear botones)
         self.btn_prev.clicked.connect(self.prev_page)
         self.btn_next.clicked.connect(self.next_page)
         self.btn_refresh.clicked.connect(self.load_data)
         self.btn_new.clicked.connect(self.open_form)
 
-        # Tabla
-        self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels([
-            "ID", "Nombre", "Precio", "Stock"
-        ])
+        # =========================
+        # GRID DE CARDS
+        # =========================
+
+        self.container = QWidget()
+        self.grid = QGridLayout()
+        self.container.setLayout(self.grid)
+
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.container)
 
         layout.addLayout(top_bar)
-        layout.addWidget(self.table)
+        layout.addWidget(self.scroll)
 
         self.setLayout(layout)
+
+        # cargar inicial
+        self.load_data()
 
     # =========================
 
@@ -69,13 +79,22 @@ class ProductoView(QWidget):
             self.has_next = data["next"] is not None
             self.has_prev = data["previous"] is not None
 
-            self.table.setRowCount(len(productos))
+            # limpiar grid
+            for i in reversed(range(self.grid.count())):
+                widget = self.grid.itemAt(i).widget()
+                if widget:
+                    widget.setParent(None)
 
-            for row, p in enumerate(productos):
-                self.table.setItem(row, 0, QTableWidgetItem(str(p["id"])))
-                self.table.setItem(row, 1, QTableWidgetItem(p["nombre"]))
-                self.table.setItem(row, 2, QTableWidgetItem(str(p["precio_base"])))
-                self.table.setItem(row, 3, QTableWidgetItem(str(p["stock"])))
+            # render cards
+            cols = 3
+
+            for i, p in enumerate(productos):
+                card = ProductoCard(p, self.service, self.load_data)
+
+                row = i // cols
+                col = i % cols
+
+                self.grid.addWidget(card, row, col)
 
             self.lbl_page.setText(f"Página: {self.page}")
 
@@ -104,3 +123,4 @@ class ProductoView(QWidget):
             self.load_data
         )
         self.form.show()
+        

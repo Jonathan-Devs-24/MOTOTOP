@@ -6,12 +6,27 @@
 # seleccionado.
 
 from PyQt6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout,
-    QPushButton, QStackedWidget, QLabel
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QStackedWidget,
+    QLabel
 )
+
+# =========================
+# PRODUCTOS
+# =========================
 
 from services.producto_service import ProductoService
 from views.producto_view import ProductoView
+
+# =========================
+# COMPRAS
+# =========================
+
+from services.compra_service import CompraService
+from views.compra_view import CompraView
 
 
 class MainWindow(QWidget):
@@ -20,16 +35,37 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.http = http_client
-        
-        producto_service = ProductoService(self.http)
+
+        # =========================
+        # SERVICES
+        # =========================
+
+        self.producto_service = ProductoService(
+            self.http
+        )
+
+        self.compra_service = CompraService(
+            self.http
+        )
+
+        # =========================
+        # WINDOW
+        # =========================
 
         self.setWindowTitle("MotoTop Desktop")
-        self.resize(1000, 600)
 
-        # Layout principal
+        self.resize(1200, 700)
+
+        # =========================
+        # MAIN LAYOUT
+        # =========================
+
         main_layout = QHBoxLayout()
 
-        # Sidebar
+        # =========================
+        # SIDEBAR
+        # =========================
+
         sidebar = QVBoxLayout()
 
         btn_productos = QPushButton("Productos")
@@ -48,36 +84,136 @@ class MainWindow(QWidget):
         sidebar.addWidget(btn_envios)
         sidebar.addWidget(btn_informes)
 
-        # Área central
+        sidebar.addStretch()
+
+        # =========================
+        # STACK
+        # =========================
+
         self.stack = QStackedWidget()
 
-        # Vistas placeholder (después se reemplazan)
-        self.view_productos = ProductoView(producto_service)
-        self.view_clientes = QLabel("Módulo Clientes")
-        self.view_pedidos = QLabel("Módulo Pedidos")
-        self.view_compras = QLabel("Módulo Compras")
-        self.view_pagos = QLabel("Módulo Cobranzas")
-        self.view_envios = QLabel("Módulo Envíos")
-        self.view_informes = QLabel("Módulo Informes")
+        # =========================
+        # VISTAS
+        # =========================
 
-        self.stack.addWidget(self.view_productos)
-        self.stack.addWidget(self.view_clientes)
-        self.stack.addWidget(self.view_pedidos)
-        self.stack.addWidget(self.view_compras)
-        self.stack.addWidget(self.view_pagos)
-        self.stack.addWidget(self.view_envios)
-        self.stack.addWidget(self.view_informes)
+        self.view_productos = ProductoView(
+            self.producto_service
+        )
 
-        # Conexiones
-        btn_productos.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_productos))
-        btn_clientes.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_clientes))
-        btn_pedidos.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_pedidos))
-        btn_compras.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_compras))
-        btn_pagos.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_pagos))
-        btn_envios.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_envios))
-        btn_informes.clicked.connect(lambda: self.stack.setCurrentWidget(self.view_informes))
+        self.view_compras = CompraView(
+            self.compra_service
+        )
+
+        # =========================
+        # PLACEHOLDERS
+        # =========================
+
+        self.view_clientes = QLabel(
+            "Módulo Clientes"
+        )
+
+        self.view_pedidos = QLabel(
+            "Módulo Pedidos"
+        )
+
+        self.view_pagos = QLabel(
+            "Módulo Cobranzas"
+        )
+
+        self.view_envios = QLabel(
+            "Módulo Envíos"
+        )
+
+        self.view_informes = QLabel(
+            "Módulo Informes"
+        )
+
+        # =========================
+        # AGREGAR AL STACK
+        # =========================
+
+        self.stack.addWidget(
+            self.view_productos
+        )
+
+        self.stack.addWidget(
+            self.view_clientes
+        )
+
+        self.stack.addWidget(
+            self.view_pedidos
+        )
+
+        self.stack.addWidget(
+            self.view_compras
+        )
+
+        self.stack.addWidget(
+            self.view_pagos
+        )
+
+        self.stack.addWidget(
+            self.view_envios
+        )
+
+        self.stack.addWidget(
+            self.view_informes
+        )
+
+        # =========================
+        # CONEXIONES
+        # =========================
+
+        btn_productos.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_productos
+            )
+        )
+
+        btn_clientes.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_clientes
+            )
+        )
+
+        btn_pedidos.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_pedidos
+            )
+        )
+
+        btn_compras.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_compras
+            )
+        )
+
+        btn_pagos.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_pagos
+            )
+        )
+
+        btn_envios.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_envios
+            )
+        )
+
+        btn_informes.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_informes
+            )
+        )
+
+        # =========================
+        # LAYOUT FINAL
+        # =========================
 
         main_layout.addLayout(sidebar, 1)
+
         main_layout.addWidget(self.stack, 4)
 
         self.setLayout(main_layout)
+        
+        

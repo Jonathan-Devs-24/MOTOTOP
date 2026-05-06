@@ -48,13 +48,28 @@ class RubroViewSet(viewsets.ModelViewSet):
 
      
 # ProductoViewSet
+
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.prefetch_related('proveedorproducto_set__proveedor')
+
+    queryset = Producto.objects.filter(activo=True).prefetch_related(
+        'proveedorproducto_set__proveedor'
+    )
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
             return ProductoReadSerializer
         return ProductoWriteSerializer
+    
+    
+    def destroy(self, request, *args, **kwargs):
+        producto = self.get_object()
+        producto.activo = False
+        producto.save()
+
+        return Response(
+            {"mensaje": "Producto desactivado"},
+            status=status.HTTP_200_OK
+        )
     
 
 # ClienteViewSet
@@ -129,3 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserWriteSerializer
     
+class ProductoPromocionViewSet(viewsets.ModelViewSet):
+    queryset = ProductoPromocion.objects.all()
+    serializer_class = ProductoPromocionSerializer

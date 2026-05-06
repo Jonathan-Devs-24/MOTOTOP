@@ -60,6 +60,8 @@ class Producto(models.Model):
     precio_base = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
 
+    activo = models.BooleanField(default=True)
+
     rubros = models.ManyToManyField('Rubro', through='RubroProducto')
     proveedores = models.ManyToManyField('Proveedor', through='ProveedorProducto')
 

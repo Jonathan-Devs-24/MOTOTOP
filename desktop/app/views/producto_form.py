@@ -7,17 +7,18 @@ from PyQt6.QtWidgets import (
 
 class ProductoForm(QWidget):
 
-    def __init__(self, producto_service, rubro_service, proveedor_service, on_success):
+    def __init__(self, producto_service, rubro_service, proveedor_service, on_success, producto=None):
         super().__init__()
 
         self.producto_service = producto_service
         self.rubro_service = rubro_service
         self.proveedor_service = proveedor_service
         self.on_success = on_success
+        self.producto = producto
 
         self.image_path = None
 
-        self.setWindowTitle("Nuevo Producto")
+        self.setWindowTitle("Editar Producto" if self.producto else "Nuevo Producto")
 
         layout = QVBoxLayout()
 
@@ -119,7 +120,12 @@ class ProductoForm(QWidget):
 
         self.setLayout(layout)
 
+        # cargar combos
         self.load_options()
+
+        # si es edición, cargar datos
+        if self.producto:
+            self.load_producto()
 
     # =========================
     # CARGA DE DATOS
@@ -230,10 +236,12 @@ class ProductoForm(QWidget):
             self.lbl_img.setText(file)
 
     # =========================
-    # SAVE
+    # SAVE (CREATE + UPDATE)
     # =========================
 
     def save(self):
+        file_obj = None
+
         try:
             nombre = self.nombre.text().strip()
             precio = float(self.precio.text())
@@ -252,11 +260,15 @@ class ProductoForm(QWidget):
 
             files = None
             if self.image_path:
-                files = {"img": open(self.image_path, "rb")}
+                file_obj = open(self.image_path, "rb")
+                files = {"img": file_obj}
 
-            self.producto_service.crear(data, files)
-
-            QMessageBox.information(self, "OK", "Producto creado")
+            if self.producto:
+                self.producto_service.actualizar(self.producto["id"], data, files)
+                QMessageBox.information(self, "OK", "Producto actualizado")
+            else:
+                self.producto_service.crear(data, files)
+                QMessageBox.information(self, "OK", "Producto creado")
 
             self.on_success()
             self.close()
@@ -266,4 +278,32 @@ class ProductoForm(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
-            
+
+        finally:
+            if file_obj:
+                file_obj.close()
+
+    # =========================
+    # LOAD PRODUCTO (EDIT)
+    # =========================
+
+    def load_producto(self):
+        p = self.producto
+
+        self.nombre.setText(p["nombre"])
+        self.precio.setText(str(p["precio_base"]))
+        self.stock.setText(str(p["stock"]))
+
+        # rubros
+        rubro_ids = [r["id"] for r in p.get("rubros", [])]
+        for i in range(self.rubros_list.count()):
+            item = self.rubros_list.item(i)
+            if item.data(1) in rubro_ids:
+                item.setSelected(True)
+
+        # proveedores
+        prov_ids = [pr["id"] for pr in p.get("proveedores", [])]
+        for i in range(self.prov_list.count()):
+            item = self.prov_list.item(i)
+            if item.data(1) in prov_ids:
+                item.setSelected(True)
