@@ -1,7 +1,7 @@
 # desktop/app/views/producto_view.py
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton,
-    QHBoxLayout, QLabel, QScrollArea, QGridLayout
+    QHBoxLayout, QLabel, QScrollArea, QGridLayout, QMessageBox
 )
 
 from services.rubro_service import RubroService
@@ -35,6 +35,62 @@ class ProductoView(QWidget):
         self.btn_next = QPushButton("Siguiente")
         self.btn_refresh = QPushButton("Recargar")
         self.btn_new = QPushButton("Nuevo")
+
+        self.btn_new.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0b7dda;
+            }
+        """)
+
+        self.btn_refresh.setStyleSheet("""
+            QPushButton {
+                background-color: #757575;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #616161;
+            }
+        """)
+
+        self.btn_prev.setStyleSheet("""
+            QPushButton {
+                background-color: #757575;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #616161;
+            }
+        """)
+
+        self.btn_next.setStyleSheet("""
+            QPushButton {
+                background-color: #757575;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #616161;
+            }
+        """)
 
         self.lbl_page = QLabel("Página: 1")
 
@@ -75,9 +131,9 @@ class ProductoView(QWidget):
         try:
             data = self.service.listar(self.page)
 
-            productos = data["results"]
-            self.has_next = data["next"] is not None
-            self.has_prev = data["previous"] is not None
+            productos = data.get("results", data)
+            self.has_next = data.get("next") is not None
+            self.has_prev = data.get("previous") is not None
 
             # limpiar grid
             for i in reversed(range(self.grid.count())):
@@ -99,7 +155,7 @@ class ProductoView(QWidget):
             self.lbl_page.setText(f"Página: {self.page}")
 
         except Exception as e:
-            print("ERROR:", e)
+            QMessageBox.critical(self, "Error", f"No se pudieron cargar los productos: {str(e)}")
 
     # =========================
 
@@ -123,4 +179,3 @@ class ProductoView(QWidget):
             self.load_data
         )
         self.form.show()
-        

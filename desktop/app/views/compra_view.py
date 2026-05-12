@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
     QScrollArea,
-    QGridLayout
+    QGridLayout,
+    QMessageBox
 )
 
 from views.compra_card import CompraCard
@@ -33,6 +34,20 @@ class CompraView(QWidget):
         layout = QVBoxLayout()
 
         self.btn_new = QPushButton("Nueva compra")
+
+        self.btn_new.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0b7dda;
+            }
+        """)
 
         self.btn_new.clicked.connect(
             self.open_form
@@ -102,7 +117,7 @@ class CompraView(QWidget):
                     row += 1
 
         except Exception as e:
-            print("ERROR:", e)
+            QMessageBox.critical(self, "Error", f"No se pudieron cargar las compras: {str(e)}")
 
     # =========================
 
