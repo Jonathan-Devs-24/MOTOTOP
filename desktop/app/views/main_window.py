@@ -31,6 +31,12 @@ from services.user_service import UserService
 from views.vendedor_view import VendedorView
 
 # =========================
+# CLIENTES
+# =========================
+
+from views.cliente_view import ClienteView
+
+# =========================
 # COMPRAS
 # =========================
 
@@ -115,16 +121,12 @@ class MainWindow(QWidget):
             self.http
         )
 
-        self.view_compras = CompraView(
-            self.compra_service
+        self.view_clientes = ClienteView(
+            self.http
         )
 
-        # =========================
-        # PLACEHOLDERS
-        # =========================
-
-        self.view_clientes = QLabel(
-            "Módulo Clientes"
+        self.view_compras = CompraView(
+            self.compra_service
         )
 
         self.view_pedidos = QLabel(

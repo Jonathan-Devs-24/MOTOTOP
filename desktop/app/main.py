@@ -18,10 +18,12 @@ def main():
     auth_service = AuthService(http)
 
     login = LoginView(auth_service, auth_store, http)
-    main_window = MainWindow(http)
+    main_window = None
 
     def on_login_success():
+        nonlocal main_window
         login.close()
+        main_window = MainWindow(http)
         main_window.show()
 
     login.login_success.connect(on_login_success)

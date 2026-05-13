@@ -2,6 +2,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from .models import (
     Zona, Cliente, Vendedor, Producto, Rubro, Proveedor,
     RubroProducto, ProveedorProducto, Pedido, DetallePedido,
@@ -40,16 +41,19 @@ class PedidoViewSet(viewsets.ModelViewSet):
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
 
 
 class RubroViewSet(viewsets.ModelViewSet):
     queryset = Rubro.objects.all()
-    serializer_class = RubroSerializer       
+    serializer_class = RubroSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop       
 
      
 # ProductoViewSet
 
 class ProductoViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
 
     queryset = Producto.objects.filter(activo=True).prefetch_related(
         'proveedorproducto_set__proveedor'
@@ -82,14 +86,40 @@ class ClienteViewSet(viewsets.ModelViewSet):
 class VendedorViewSet(viewsets.ModelViewSet):
     queryset = Vendedor.objects.all()
     serializer_class = VendedorSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
+
+    @action(detail=True, methods=['post'])
+    def cambiar_estado(self, request, pk=None):
+        vendedor = self.get_object()
+        
+        try:
+            # Cambiar entre activo e inactivo
+            nuevo_estado = 'inactivo' if vendedor.estado == 'activo' else 'activo'
+            vendedor.estado = nuevo_estado
+            vendedor.save()
+            
+            return Response(
+                {
+                    "mensaje": f"Vendedor {nuevo_estado} correctamente",
+                    "estado": nuevo_estado
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # ZonaViewSet
 class ZonaViewSet(viewsets.ModelViewSet):
     queryset = Zona.objects.all()
     serializer_class = ZonaSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
 
 # CompraViewSet
 class CompraViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
     queryset = Compra.objects.all()
     serializer_class = CompraReadSerializer
 
@@ -138,12 +168,16 @@ class EnvioViewSet(viewsets.ModelViewSet):
 class PromocionViewSet(viewsets.ModelViewSet):
     queryset = Promocion.objects.all()
     serializer_class = PromocionSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserWriteSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
     
 class ProductoPromocionViewSet(viewsets.ModelViewSet):
     queryset = ProductoPromocion.objects.all()
     serializer_class = ProductoPromocionSerializer
+    permission_classes = [AllowAny]  # Sin autenticación para el desktop
+    

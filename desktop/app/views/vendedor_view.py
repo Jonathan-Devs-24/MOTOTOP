@@ -162,7 +162,7 @@ class VendedorView(QWidget):
                         font-weight: bold;
                     }
                     QPushButton:hover {
-                        background-c7lor: #e68900;
+                        background-color: #e68900;
                     }
                 """)
                 btn_estado.clicked.connect(
