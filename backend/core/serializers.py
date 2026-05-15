@@ -195,7 +195,7 @@ class PedidoReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pedido
-        fields = ['id', 'cliente', 'vendedor', 'fecha_pedido', 'estado', 'total', 'detalles']
+        fields = ['id', 'cliente', 'vendedor', 'origen', 'fecha_pedido', 'estado', 'total', 'detalles']
             
 # FACTURA ================================================================   
 class DetalleFacturaReadSerializer(serializers.ModelSerializer):

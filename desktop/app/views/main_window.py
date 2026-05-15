@@ -20,6 +20,8 @@ from PyQt6.QtWidgets import (
 
 from services.producto_service import ProductoService
 from views.producto_view import ProductoView
+from services.cliente_service import ClienteService
+from services.pedido_service import PedidoService
 
 # =========================
 # VENDEDORES
@@ -35,6 +37,12 @@ from views.vendedor_view import VendedorView
 # =========================
 
 from views.cliente_view import ClienteView
+
+# =========================
+# PEDIDOS
+# =========================
+
+from views.pedido_view import PedidoView
 
 # =========================
 # COMPRAS
@@ -56,6 +64,18 @@ class MainWindow(QWidget):
         # =========================
 
         self.producto_service = ProductoService(
+            self.http
+        )
+
+        self.cliente_service = ClienteService(
+            self.http
+        )
+
+        self.vendedor_service = VendedorService(
+            self.http
+        )
+
+        self.pedido_service = PedidoService(
             self.http
         )
 
@@ -125,12 +145,15 @@ class MainWindow(QWidget):
             self.http
         )
 
-        self.view_compras = CompraView(
-            self.compra_service
+        self.view_pedidos = PedidoView(
+            self.pedido_service,
+            self.cliente_service,
+            self.vendedor_service,
+            self.producto_service
         )
 
-        self.view_pedidos = QLabel(
-            "Módulo Pedidos"
+        self.view_compras = CompraView(
+            self.compra_service
         )
 
         self.view_pagos = QLabel(
