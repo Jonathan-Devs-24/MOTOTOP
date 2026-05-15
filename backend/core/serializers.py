@@ -192,10 +192,18 @@ class PedidoReadSerializer(serializers.ModelSerializer):
     cliente = ClienteSerializer()
     vendedor = VendedorSerializer()
     detalles = DetallePedidoReadSerializer(many=True)
+    facturada = serializers.SerializerMethodField()
 
     class Meta:
         model = Pedido
-        fields = ['id', 'cliente', 'vendedor', 'origen', 'fecha_pedido', 'estado', 'total', 'detalles']
+        fields = ['id', 'cliente', 'vendedor', 'origen', 'fecha_pedido', 'estado', 'total', 'detalles', 'facturada']
+
+    def get_facturada(self, obj):
+        try:
+            _ = obj.factura
+            return True
+        except Factura.DoesNotExist:
+            return False
             
 # FACTURA ================================================================   
 class DetalleFacturaReadSerializer(serializers.ModelSerializer):
@@ -338,6 +346,12 @@ class FacturaWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Factura
         fields = ['pedido', 'tipo_comprobante']
+
+    def validate(self, data):
+        pedido = data['pedido']
+        if Factura.objects.filter(pedido=pedido).exists():
+            raise serializers.ValidationError("El pedido ya tiene factura")
+        return data
 
     @transaction.atomic
     def create(self, validated_data):

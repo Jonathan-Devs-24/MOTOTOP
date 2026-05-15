@@ -37,7 +37,44 @@ class PedidoViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-       
+
+    @action(detail=True, methods=['post'])
+    def cancelar(self, request, pk=None):
+        pedido = self.get_object()
+
+        if pedido.estado == 'confirmado':
+            return Response(
+                {"error": "No se puede cancelar un pedido ya confirmado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if pedido.estado == 'cancelado':
+            return Response(
+                {"mensaje": "El pedido ya está cancelado"},
+                status=status.HTTP_200_OK
+            )
+
+        pedido.estado = 'cancelado'
+        pedido.save()
+
+        return Response(
+            {"mensaje": "Pedido cancelado correctamente"},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['get'])
+    def factura(self, request, pk=None):
+        pedido = self.get_object()
+        try:
+            factura = pedido.factura
+            serializer = FacturaReadSerializer(factura)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Factura.DoesNotExist:
+            return Response(
+                {"error": "No existe factura para este pedido"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer

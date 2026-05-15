@@ -49,7 +49,9 @@ from views.pedido_view import PedidoView
 # =========================
 
 from services.compra_service import CompraService
+from services.factura_service import FacturaService
 from views.compra_view import CompraView
+from views.factura_view import FacturaView
 
 
 class MainWindow(QWidget):
@@ -83,6 +85,10 @@ class MainWindow(QWidget):
             self.http
         )
 
+        self.factura_service = FacturaService(
+            self.http
+        )
+
         # =========================
         # WINDOW
         # =========================
@@ -107,6 +113,7 @@ class MainWindow(QWidget):
         btn_vendedores = QPushButton("Vendedores")
         btn_clientes = QPushButton("Clientes")
         btn_pedidos = QPushButton("Pedidos")
+        btn_facturas = QPushButton("Facturas")
         btn_compras = QPushButton("Compras")
         btn_pagos = QPushButton("Cobranzas")
         btn_envios = QPushButton("Envíos")
@@ -116,6 +123,7 @@ class MainWindow(QWidget):
         sidebar.addWidget(btn_vendedores)
         sidebar.addWidget(btn_clientes)
         sidebar.addWidget(btn_pedidos)
+        sidebar.addWidget(btn_facturas)
         sidebar.addWidget(btn_compras)
         sidebar.addWidget(btn_pagos)
         sidebar.addWidget(btn_envios)
@@ -152,6 +160,10 @@ class MainWindow(QWidget):
             self.producto_service
         )
 
+        self.view_facturas = FacturaView(
+            self.factura_service
+        )
+
         self.view_compras = CompraView(
             self.compra_service
         )
@@ -186,6 +198,10 @@ class MainWindow(QWidget):
 
         self.stack.addWidget(
             self.view_pedidos
+        )
+
+        self.stack.addWidget(
+            self.view_facturas
         )
 
         self.stack.addWidget(
@@ -229,6 +245,12 @@ class MainWindow(QWidget):
         btn_pedidos.clicked.connect(
             lambda: self.stack.setCurrentWidget(
                 self.view_pedidos
+            )
+        )
+
+        btn_facturas.clicked.connect(
+            lambda: self.stack.setCurrentWidget(
+                self.view_facturas
             )
         )
 

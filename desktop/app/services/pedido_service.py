@@ -17,3 +17,22 @@ class PedidoService:
         response = self.http.post(f"pedidos/{pedido_id}/confirmar/")
         response.raise_for_status()
         return response.json()
+
+    def cancelar(self, pedido_id):
+        response = self.http.post(f"pedidos/{pedido_id}/cancelar/")
+        response.raise_for_status()
+        return response.json()
+
+    def generar_factura(self, pedido_id, tipo_comprobante='B'):
+        data = {
+            'pedido': pedido_id,
+            'tipo_comprobante': tipo_comprobante
+        }
+        response = self.http.post("facturas/", data)
+        response.raise_for_status()
+        return response.json()
+
+    def obtener_factura(self, pedido_id):
+        response = self.http.get(f"pedidos/{pedido_id}/factura/")
+        response.raise_for_status()
+        return response.json()
