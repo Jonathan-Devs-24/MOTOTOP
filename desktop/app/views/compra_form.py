@@ -177,3 +177,5 @@ class CompraForm(QWidget):
                 "Error",
                 str(e)
             )
+            
+            

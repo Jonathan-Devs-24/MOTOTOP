@@ -146,3 +146,5 @@ class PromocionForm(QWidget):
                 "Error",
                 str(e)
             )
+            
+            

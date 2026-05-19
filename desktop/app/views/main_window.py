@@ -54,6 +54,14 @@ from views.compra_view import CompraView
 from views.factura_view import FacturaView
 
 
+# =========================
+# ENVIOS
+# =========================
+
+from services.envio_service import EnvioService
+from views.envio_view import EnvioView
+
+
 class MainWindow(QWidget):
 
     def __init__(self, http_client):
@@ -86,6 +94,10 @@ class MainWindow(QWidget):
         )
 
         self.factura_service = FacturaService(
+            self.http
+        )
+        
+        self.envio_service = EnvioService(
             self.http
         )
 
@@ -172,8 +184,8 @@ class MainWindow(QWidget):
             "Módulo Cobranzas"
         )
 
-        self.view_envios = QLabel(
-            "Módulo Envíos"
+        self.view_envios = EnvioView(
+            self.envio_service
         )
 
         self.view_informes = QLabel(

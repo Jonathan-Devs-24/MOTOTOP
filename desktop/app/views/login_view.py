@@ -57,3 +57,4 @@ class LoginView(QWidget):
 
         except Exception as e:
             self.status.setText(str(e))
+            

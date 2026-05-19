@@ -68,3 +68,5 @@ class CompraCard(QWidget):
                 "Error",
                 str(e)
             )
+            
+            

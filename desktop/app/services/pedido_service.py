@@ -1,3 +1,4 @@
+# desktop/app/services/pedido_service.py
 class PedidoService:
 
     def __init__(self, http):

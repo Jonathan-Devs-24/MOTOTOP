@@ -425,3 +425,7 @@ class ProductoCard(QWidget):
                     "Error",
                     str(e)
                 )
+                
+                
+                
+                

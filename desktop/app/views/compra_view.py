@@ -131,3 +131,4 @@ class CompraView(QWidget):
         )
 
         self.form.show()
+        
