@@ -1,3 +1,4 @@
+# desktop/app/views/envio_form.py
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -38,8 +39,11 @@ class EnvioForm(QWidget):
         # EMPRESA DE TRANSPORTE
         # ==========================================
         layout.addWidget(QLabel("Empresa de transporte"))
-        self.empresa_transporte = QLineEdit()
+        self.empresa_transporte = QComboBox()
+        self.empresa_transporte.setEditable(True)
         layout.addWidget(self.empresa_transporte)
+
+        self.cargar_empresas_transporte()
 
         # ==========================================
         # TRACKING
@@ -112,7 +116,7 @@ class EnvioForm(QWidget):
     # ==========================================
 
     def load_envio(self):
-        self.empresa_transporte.setText(
+        self.empresa_transporte.setCurrentText(
             self.envio.get("empresa_transporte", "")
         )
 
@@ -142,7 +146,7 @@ class EnvioForm(QWidget):
     def build_data(self):
         return {
             "pedido": self.pedido["id"],
-            "empresa_transporte": self.empresa_transporte.text().strip(),
+            "empresa_transporte": self.empresa_transporte.currentText().strip(),
             "tracking_code": self.tracking_code.text().strip() or None,
             "estado_envio": self.estado_envio.currentData(),
             "fecha_envio": self.fecha_envio.dateTime().toString(
@@ -196,3 +200,21 @@ class EnvioForm(QWidget):
             QMessageBox.critical(self, "Error", str(e))
             
             
+            
+    def cargar_empresas_transporte(self):
+        try:
+            envios = self.envio_service.listar()
+
+            if isinstance(envios, dict) and "results" in envios:
+                envios = envios["results"]
+
+            empresas = sorted({
+                envio.get("empresa_transporte", "").strip()
+                for envio in envios
+                if envio.get("empresa_transporte")
+            })
+
+            self.empresa_transporte.addItems(empresas)
+
+        except Exception:
+            pass

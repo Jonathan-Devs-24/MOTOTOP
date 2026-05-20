@@ -37,3 +37,9 @@ class PedidoService:
         response = self.http.get(f"pedidos/{pedido_id}/factura/")
         response.raise_for_status()
         return response.json()
+
+
+    def obtener(self, pedido_id):
+            response = self.http.get(f"pedidos/{pedido_id}/")
+            response.raise_for_status()
+            return response.json()

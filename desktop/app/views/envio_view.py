@@ -36,9 +36,11 @@ class EnvioView(QWidget):
 
         self.btn_actualizar = QPushButton("Actualizar")
         self.btn_crear = QPushButton("Crear envío")
+        self.btn_editar = QPushButton("Editar envío")
 
         botones_layout.addWidget(self.btn_actualizar)
         botones_layout.addWidget(self.btn_crear)
+        botones_layout.addWidget(self.btn_editar)
         botones_layout.addStretch()
 
         # Tabla
@@ -62,6 +64,7 @@ class EnvioView(QWidget):
         # Eventos
         self.btn_actualizar.clicked.connect(self.cargar_datos)
         self.btn_crear.clicked.connect(self.crear_envio)
+        self.btn_editar.clicked.connect(self.editar_envio)
 
     def cargar_datos(self):
         try:
@@ -107,53 +110,53 @@ class EnvioView(QWidget):
 
     def crear_envio(self):
         try:
+            # Obtener pedidos
             pedidos = self.pedido_service.listar()
+            
 
             if isinstance(pedidos, dict) and "results" in pedidos:
                 pedidos = pedidos["results"]
 
+            # Filtrar solo pedidos confirmados
             pedidos_confirmados = [
                 p for p in pedidos
                 if p["estado"] == "confirmado"
             ]
 
+            # Obtener envíos existentes
+            envios = self.envio_service.listar()
+
+            if isinstance(envios, dict) and "results" in envios:
+                envios = envios["results"]
+
+            # IDs de pedidos que ya tienen envío
             pedidos_con_envio = {
                 envio["pedido"]
-                for envio in self.envio_service.listar().get("results", [])
-                if isinstance(self.envio_service.listar(), dict)
+                for envio in envios
             }
 
-            pedido_disponible = None
+            # Pedidos disponibles para crear envío
+            pedidos_disponibles = [
+                p for p in pedidos_confirmados
+                if p["id"] not in pedidos_con_envio
+            ]
 
-            for pedido in pedidos_confirmados:
-                if pedido["id"] not in pedidos_con_envio:
-                    pedido_disponible = pedido
-                    break
-
-            if not pedido_disponible:
+            if not pedidos_disponibles:
                 QMessageBox.information(
                     self,
                     "Información",
-                    "No hay pedidos confirmados disponibles para generar envíos."
+                    "No hay pedidos confirmados sin envío."
                 )
                 return
 
-            data = {
-                "pedido": pedido_disponible["id"],
-                "empresa_transporte": "Correo Argentino",
-                "tracking_code": "",
-                "estado_envio": "recibido"
-            }
+            # Abrir un formulario propio para seleccionar el pedido
+            from views.select_pedido_envio_view import SelectPedidoEnvioView
 
-            self.envio_service.crear(data)
-
-            QMessageBox.information(
-                self,
-                "Éxito",
-                "Envío creado correctamente."
+            self.select_pedido_window = SelectPedidoEnvioView(
+                pedidos=pedidos_disponibles,
+                on_select=self.abrir_formulario_envio
             )
-
-            self.cargar_datos()
+            self.select_pedido_window.show()
 
         except Exception as e:
             QMessageBox.critical(
@@ -161,5 +164,44 @@ class EnvioView(QWidget):
                 "Error",
                 str(e)
             )
+
+
+    def abrir_formulario_envio(self, pedido):
+        from views.envio_form import EnvioForm
+
+        self.envio_form = EnvioForm(
+            pedido=pedido,
+            envio_service=self.envio_service,
+            on_success=self.cargar_datos
+        )
+        self.envio_form.show()
             
             
+    def editar_envio(self):
+        row = self.table.currentRow()
+
+        if row < 0:
+            QMessageBox.warning(
+                self,
+                "Selección requerida",
+                "Debe seleccionar un envío."
+            )
+            return
+
+        envio_id = int(self.table.item(row, 0).text())
+        envio = self.envio_service.obtener(envio_id)
+
+        pedido_id = envio["pedido"]
+        pedido = self.pedido_service.obtener(pedido_id)
+
+        from views.envio_form import EnvioForm
+
+        self.form = EnvioForm(
+            pedido=pedido,
+            envio_service=self.envio_service,
+            on_success=self.cargar_datos,
+            envio=envio
+        )
+        self.form.show()
+        
+        

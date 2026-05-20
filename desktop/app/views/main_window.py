@@ -61,6 +61,13 @@ from views.factura_view import FacturaView
 from services.envio_service import EnvioService
 from views.envio_view import EnvioView
 
+# =========================
+# PAGOS / COBRANZAS
+# =========================
+
+from services.pago_service import PagoService
+from views.pago_view import PagoView
+
 
 class MainWindow(QWidget):
 
@@ -98,6 +105,10 @@ class MainWindow(QWidget):
         )
         
         self.envio_service = EnvioService(
+            self.http
+        )
+        
+        self.pago_service = PagoService(
             self.http
         )
 
@@ -180,8 +191,9 @@ class MainWindow(QWidget):
             self.compra_service
         )
 
-        self.view_pagos = QLabel(
-            "Módulo Cobranzas"
+        self.view_pagos = PagoView(
+            factura=None,
+            pago_service=self.pago_service
         )
 
         self.view_envios = EnvioView(
@@ -232,6 +244,7 @@ class MainWindow(QWidget):
             self.view_informes
         )
 
+        
         # =========================
         # CONEXIONES
         # =========================

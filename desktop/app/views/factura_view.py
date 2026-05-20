@@ -27,6 +27,7 @@ class FacturaView(QWidget):
         self.btn_refresh = QPushButton("Recargar")
         self.btn_refresh.setStyleSheet("background-color: #757575; color: white; border: none; padding: 8px 16px; border-radius: 4px;")
         self.btn_refresh.clicked.connect(self.load_data)
+        
 
         top_bar.addWidget(self.btn_refresh)
         top_bar.addStretch()
@@ -115,5 +116,27 @@ class FacturaView(QWidget):
                 detail_line = QLabel(f"- {product_name} x{cantidad} / ${subtotal}")
                 detail_line.setStyleSheet("color: #555; font-size: 9pt;")
                 card_layout.addWidget(detail_line)
-
+                
+                
+        btn_pagos = QPushButton("Pagos")
+        btn_pagos.clicked.connect(
+            lambda _, f=factura: self.abrir_pagos(f)
+        )
+        card_layout.addWidget(btn_pagos)
+        
+        
         return card
+    
+    
+    
+    def abrir_pagos(self, factura):
+        from services.pago_service import PagoService
+        from views.pago_view import PagoView
+
+        pago_service = PagoService(self.service.http)
+
+        self.pago_view = PagoView(
+            factura=factura,
+            pago_service=pago_service
+        )
+        self.pago_view.show()
