@@ -1,6 +1,5 @@
-# desktop/app/services/pago_service.py
-
 class PagoService:
+
     def __init__(self, http):
         self.http = http
 
@@ -9,43 +8,48 @@ class PagoService:
         return response.json()
 
     def listar_por_factura(self, factura_id):
-        """
-        Obtiene todos los pagos y filtra los que pertenecen
-        a la factura indicada.
 
-        La API devuelve el campo factura como ID numérico.
-        Ejemplo:
-        {
-            "factura": 3,
-            "monto": "1000.00",
-            ...
-        }
-        """
         pagos = self.listar()
 
-        # Si la API usa paginación DRF
         if isinstance(pagos, dict):
             pagos = pagos.get("results", [])
 
-        pagos_filtrados = []
-
-        for pago in pagos:
-            if pago.get("factura") == factura_id:
-                pagos_filtrados.append(pago)
-
-        return pagos_filtrados
+        return [
+            pago
+            for pago in pagos
+            if pago.get("factura") == factura_id
+        ]
 
     def obtener(self, pago_id):
         response = self.http.get(f"pagos/{pago_id}/")
+        response.raise_for_status()
         return response.json()
 
     def crear(self, data):
-        response = self.http.post("pagos/", data=data)
+        response = self.http.post(
+            "pagos/",
+            data=data
+        )
+
+        response.raise_for_status()
+
         return response.json()
 
     def actualizar(self, pago_id, data):
-        response = self.http.put(f"pagos/{pago_id}/", data=data)
+
+        response = self.http.put(
+            f"pagos/{pago_id}/",
+            data=data
+        )
+
+        response.raise_for_status()
+
         return response.json()
 
     def eliminar(self, pago_id):
-        self.http.delete(f"pagos/{pago_id}/")
+
+        response = self.http.delete(
+            f"pagos/{pago_id}/"
+        )
+
+        response.raise_for_status()
