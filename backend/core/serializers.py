@@ -229,8 +229,14 @@ class PagoSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
 
-        factura = data['factura']
-        monto = data['monto']
+        factura = data.get('factura')
+        monto = data.get('monto')
+        estado = data.get('estado')
+
+        if self.instance:
+            factura = factura or self.instance.factura
+            monto = monto or self.instance.monto
+            estado = estado or self.instance.estado
 
         if monto <= 0:
             raise serializers.ValidationError(
@@ -241,7 +247,6 @@ class PagoSerializer(serializers.ModelSerializer):
             estado='completado'
         )
 
-        # EXCLUIR pago actual en updates
         if self.instance:
             total_pagado = total_pagado.exclude(
                 id=self.instance.id
@@ -251,7 +256,9 @@ class PagoSerializer(serializers.ModelSerializer):
             total=Sum('monto')
         )['total'] or 0
 
-        if total_pagado + monto > factura.total:
+        nuevo_monto = monto if estado == 'completado' else 0
+
+        if total_pagado + nuevo_monto > factura.total:
             raise serializers.ValidationError(
                 "El pago excede el total de la factura"
             )

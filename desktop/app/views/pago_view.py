@@ -1,7 +1,5 @@
 # desktop/app/views/pago_view.py
 
-from collections import defaultdict
-
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -10,146 +8,75 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QMessageBox,
-    QLabel,
+    QLabel
 )
 
-from services.factura_service import FacturaService
+from views.pago_form import PagoForm
 
 
 class PagoView(QWidget):
 
     def __init__(self, factura=None, pago_service=None):
+
         super().__init__()
 
         self.factura = factura
-        self.pago_service = pago_service
+        self.service = pago_service
 
-        self.factura_service = FacturaService(
-            self.pago_service.http
-        )
+        # =========================
+        # WINDOW TITLE
+        # =========================
 
         if self.factura:
+
             self.setWindowTitle(
                 f"Pagos - Factura #{self.factura['id']}"
             )
+
         else:
-            self.setWindowTitle("Cobranzas")
 
-        self.resize(1300, 550)
+            self.setWindowTitle(
+                "Pagos"
+            )
 
-        self.init_ui()
-        self.cargar_datos()
-
-    def init_ui(self):
+        # =========================
+        # LAYOUT
+        # =========================
 
         layout = QVBoxLayout()
 
-        # ====================================
-        # Resumen
-        # ====================================
+        # =========================
+        # INFO FACTURA
+        # =========================
 
-        self.label_total = QLabel()
-        self.label_pagado = QLabel()
-        self.label_saldo = QLabel()
-        self.label_estado = QLabel()
+        if self.factura:
 
-        layout.addWidget(self.label_total)
-        layout.addWidget(self.label_pagado)
-        layout.addWidget(self.label_saldo)
-        layout.addWidget(self.label_estado)
+            info = QLabel(
+                f"Factura #{self.factura['id']} | "
+                f"Total: ${self.factura['total']}"
+            )
 
-        # ====================================
-        # Botones
-        # ====================================
+        else:
 
-        botones_layout = QHBoxLayout()
+            info = QLabel(
+                "Listado general de pagos"
+            )
 
-        self.btn_actualizar = QPushButton(
-            "Actualizar"
-        )
+        layout.addWidget(info)
 
-        self.btn_nuevo = QPushButton(
-            "Nuevo pago"
-        )
+        # =========================
+        # BOTONES
+        # =========================
 
-        self.btn_editar = QPushButton(
-            "Editar"
-        )
+        buttons_layout = QHBoxLayout()
 
-        self.btn_eliminar = QPushButton(
-            "Eliminar"
-        )
+        self.btn_crear = QPushButton("Crear")
+        self.btn_editar = QPushButton("Editar")
+        self.btn_eliminar = QPushButton("Eliminar")
+        self.btn_recargar = QPushButton("Recargar")
 
-        botones_layout.addWidget(
-            self.btn_actualizar
-        )
-
-        botones_layout.addWidget(
-            self.btn_nuevo
-        )
-
-        botones_layout.addWidget(
-            self.btn_editar
-        )
-
-        botones_layout.addWidget(
-            self.btn_eliminar
-        )
-
-        botones_layout.addStretch()
-
-        layout.addLayout(botones_layout)
-
-        # ====================================
-        # Tabla
-        # ====================================
-
-        self.table = QTableWidget()
-
-        self.table.setColumnCount(10)
-
-        self.table.setHorizontalHeaderLabels([
-            "Pago ID",
-            "Factura",
-            "Pedido",
-            "Total Factura",
-            "Total Pagado",
-            "Saldo",
-            "Estado Factura",
-            "Monto Pago",
-            "Método",
-            "Fecha",
-        ])
-
-        layout.addWidget(self.table)
-
-        self.setLayout(layout)
-
-        # ====================================
-        # Configuración
-        # ====================================
-
-        if not self.factura:
-
-            self.btn_nuevo.setEnabled(False)
-            self.btn_editar.setEnabled(False)
-            self.btn_eliminar.setEnabled(False)
-
-            self.label_total.hide()
-            self.label_pagado.hide()
-            self.label_saldo.hide()
-            self.label_estado.hide()
-
-        # ====================================
-        # Eventos
-        # ====================================
-
-        self.btn_actualizar.clicked.connect(
-            self.cargar_datos
-        )
-
-        self.btn_nuevo.clicked.connect(
-            self.nuevo_pago
+        self.btn_crear.clicked.connect(
+            self.crear_pago
         )
 
         self.btn_editar.clicked.connect(
@@ -160,311 +87,126 @@ class PagoView(QWidget):
             self.eliminar_pago
         )
 
-    def calcular_total_pagado(self, pagos):
-
-        total = 0
-
-        for pago in pagos:
-
-            if pago.get("estado") == "completado":
-
-                total += float(
-                    pago.get("monto", 0)
-                )
-
-        return total
-
-    def cargar_resumen_factura(self, pagos):
-
-        total_factura = float(
-            self.factura.get("total", 0)
+        self.btn_recargar.clicked.connect(
+            self.cargar_pagos
         )
 
-        total_pagado = self.calcular_total_pagado(
-            pagos
-        )
+        buttons_layout.addWidget(self.btn_crear)
+        buttons_layout.addWidget(self.btn_editar)
+        buttons_layout.addWidget(self.btn_eliminar)
+        buttons_layout.addWidget(self.btn_recargar)
 
-        saldo = total_factura - total_pagado
+        layout.addLayout(buttons_layout)
 
-        estado = (
-            "SALDADA"
-            if saldo <= 0
-            else "PENDIENTE"
-        )
+        # =========================
+        # TABLA
+        # =========================
 
-        self.label_total.setText(
-            f"Total factura: ${total_factura:.2f}"
-        )
+        self.table = QTableWidget()
 
-        self.label_pagado.setText(
-            f"Total pagado: ${total_pagado:.2f}"
-        )
+        self.table.setColumnCount(6)
 
-        self.label_saldo.setText(
-            f"Saldo pendiente: ${saldo:.2f}"
-        )
+        self.table.setHorizontalHeaderLabels([
+            "ID",
+            "Factura",
+            "Monto",
+            "Método",
+            "Estado",
+            "Referencia"
+        ])
 
-        self.label_estado.setText(
-            f"Estado: {estado}"
-        )
+        layout.addWidget(self.table)
 
-        if saldo <= 0:
+        self.setLayout(layout)
 
-            self.label_estado.setStyleSheet(
-                """
-                color: green;
-                font-weight: bold;
-                font-size: 14px;
-                """
-            )
+        # =========================
+        # LOAD
+        # =========================
 
-            self.label_saldo.setStyleSheet(
-                """
-                color: green;
-                font-weight: bold;
-                """
-            )
+        self.cargar_pagos()
 
-        else:
+    # =========================================================
+    # CARGAR PAGOS
+    # =========================================================
 
-            self.label_estado.setStyleSheet(
-                """
-                color: red;
-                font-weight: bold;
-                font-size: 14px;
-                """
-            )
-
-            self.label_saldo.setStyleSheet(
-                """
-                color: red;
-                font-weight: bold;
-                """
-            )
-
-    def cargar_datos(self):
+    def cargar_pagos(self):
 
         try:
 
             if self.factura:
 
-                pagos = self.pago_service.listar_por_factura(
+                response = self.service.listar_por_factura(
                     self.factura["id"]
                 )
 
             else:
 
-                pagos = self.pago_service.listar()
+                response = self.service.listar()
 
-                if isinstance(pagos, dict):
-                    pagos = pagos.get("results", [])
-
-            # ====================================
-            # Resumen
-            # ====================================
+            pagos = response["results"]
 
             if self.factura:
 
-                self.cargar_resumen_factura(
-                    pagos
-                )
-
-            # ====================================
-            # Cache pagos
-            # ====================================
-
-            pagos_por_factura = defaultdict(list)
-
-            for pago in pagos:
-
-                factura_id = pago.get("factura")
-
-                pagos_por_factura[
-                    factura_id
-                ].append(pago)
-
-            # ====================================
-            # Tabla
-            # ====================================
-
-            self.table.setRowCount(len(pagos))
-
-            for row, pago in enumerate(pagos):
-
-                pago_id = pago.get("id")
-
-                factura_id = pago.get("factura")
-
-                factura = self.factura_service.obtener(
-                    factura_id
-                )
-
-                total_factura = float(
-                    factura.get("total", 0)
-                )
-
-                pagos_factura = pagos_por_factura[
-                    factura_id
+                pagos = [
+                    p for p in pagos
+                    if p["factura"] == self.factura["id"]
                 ]
 
-                total_pagado = (
-                    self.calcular_total_pagado(
-                        pagos_factura
-                    )
-                )
+            self.table.setRowCount(
+                len(pagos)
+            )
 
-                saldo = (
-                    total_factura
-                    - total_pagado
-                )
-
-                estado_factura = (
-                    "Saldada"
-                    if saldo <= 0
-                    else "Pendiente"
-                )
-
-                # ====================================
-                # Pago ID
-                # ====================================
+            for row, pago in enumerate(pagos):
 
                 self.table.setItem(
                     row,
                     0,
                     QTableWidgetItem(
-                        str(pago_id)
+                        str(pago["id"])
                     )
                 )
-
-                # ====================================
-                # Factura
-                # ====================================
 
                 self.table.setItem(
                     row,
                     1,
                     QTableWidgetItem(
-                        str(factura_id)
+                        str(pago["factura"])
                     )
                 )
-
-                # ====================================
-                # Pedido
-                # ====================================
 
                 self.table.setItem(
                     row,
                     2,
                     QTableWidgetItem(
-                        str(
-                            factura.get(
-                                "pedido",
-                                ""
-                            )
-                        )
+                        str(pago["monto"])
                     )
                 )
-
-                # ====================================
-                # Total Factura
-                # ====================================
 
                 self.table.setItem(
                     row,
                     3,
                     QTableWidgetItem(
-                        f"${total_factura:.2f}"
+                        pago["metodo_pago"]
                     )
                 )
-
-                # ====================================
-                # Total Pagado
-                # ====================================
 
                 self.table.setItem(
                     row,
                     4,
                     QTableWidgetItem(
-                        f"${total_pagado:.2f}"
+                        pago["estado"]
                     )
                 )
-
-                # ====================================
-                # Saldo
-                # ====================================
 
                 self.table.setItem(
                     row,
                     5,
                     QTableWidgetItem(
-                        f"${saldo:.2f}"
-                    )
-                )
-
-                # ====================================
-                # Estado Factura
-                # ====================================
-
-                self.table.setItem(
-                    row,
-                    6,
-                    QTableWidgetItem(
-                        estado_factura
-                    )
-                )
-
-                # ====================================
-                # Monto Pago
-                # ====================================
-
-                self.table.setItem(
-                    row,
-                    7,
-                    QTableWidgetItem(
                         str(
-                            pago.get(
-                                "monto",
-                                ""
-                            )
+                            pago["referencia"]
                         )
                     )
                 )
-
-                # ====================================
-                # Método
-                # ====================================
-
-                self.table.setItem(
-                    row,
-                    8,
-                    QTableWidgetItem(
-                        str(
-                            pago.get(
-                                "metodo_pago",
-                                ""
-                            )
-                        )
-                    )
-                )
-
-                # ====================================
-                # Fecha
-                # ====================================
-
-                self.table.setItem(
-                    row,
-                    9,
-                    QTableWidgetItem(
-                        str(
-                            pago.get(
-                                "fecha_pago",
-                                ""
-                            )
-                        )
-                    )
-                )
-
-            self.table.resizeColumnsToContents()
 
         except Exception as e:
 
@@ -474,52 +216,110 @@ class PagoView(QWidget):
                 str(e)
             )
 
-    def nuevo_pago(self):
+    # =========================================================
+    # OBTENER ID
+    # =========================================================
 
-        from views.pago_form import PagoForm
+    def obtener_id_seleccionado(self):
 
-        self.form = PagoForm(
-            factura=self.factura,
-            pago_service=self.pago_service,
-            on_success=self.cargar_datos,
+        fila = self.table.currentRow()
+
+        if fila < 0:
+            return None
+
+        return int(
+            self.table.item(fila, 0).text()
         )
 
-        self.form.show()
+    # =========================================================
+    # CREAR
+    # =========================================================
+
+    def crear_pago(self):
+
+        if not self.factura:
+
+            QMessageBox.warning(
+                self,
+                "Error",
+                "Debe abrir pagos desde una factura"
+            )
+
+            return
+
+        dialog = PagoForm(
+            self,
+            factura_id=self.factura["id"]
+        )
+
+        if dialog.exec():
+
+            try:
+
+                data = dialog.obtener_datos()
+
+                self.service.crear(data)
+
+                self.cargar_pagos()
+
+            except Exception as e:
+
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    str(e)
+                )
+
+    # =========================================================
+    # EDITAR
+    # =========================================================
 
     def editar_pago(self):
 
-        row = self.table.currentRow()
-
-        if row < 0:
+        if not self.factura:
 
             QMessageBox.warning(
                 self,
-                "Selección requerida",
-                "Debe seleccionar un pago."
+                "Error",
+                "Abra pagos desde una factura"
             )
 
             return
 
-        pago_id = int(
-            self.table.item(row, 0).text()
-        )
+        pago_id = self.obtener_id_seleccionado()
+
+        if not pago_id:
+
+            QMessageBox.warning(
+                self,
+                "Error",
+                "Seleccione un pago"
+            )
+
+            return
 
         try:
 
-            pago = self.pago_service.obtener(
+            pago = self.service.obtener(
                 pago_id
             )
 
-            from views.pago_form import PagoForm
-
-            self.form = PagoForm(
-                factura=self.factura,
-                pago_service=self.pago_service,
-                on_success=self.cargar_datos,
+            dialog = PagoForm(
+                self,
+                factura_id=self.factura["id"],
                 pago=pago
             )
 
-            self.form.show()
+            if dialog.exec():
+
+                data = dialog.obtener_datos()
+
+                self.service.actualizar(
+                    pago_id,
+                    data
+                )
+
+                self.cargar_pagos()
 
         except Exception as e:
 
@@ -529,46 +329,31 @@ class PagoView(QWidget):
                 str(e)
             )
 
+    # =========================================================
+    # ELIMINAR
+    # =========================================================
+
     def eliminar_pago(self):
 
-        row = self.table.currentRow()
+        pago_id = self.obtener_id_seleccionado()
 
-        if row < 0:
+        if not pago_id:
 
             QMessageBox.warning(
                 self,
-                "Selección requerida",
-                "Debe seleccionar un pago."
+                "Error",
+                "Seleccione un pago"
             )
 
-            return
-
-        pago_id = int(
-            self.table.item(row, 0).text()
-        )
-
-        confirm = QMessageBox.question(
-            self,
-            "Confirmar",
-            "¿Eliminar el pago seleccionado?"
-        )
-
-        if confirm != QMessageBox.StandardButton.Yes:
             return
 
         try:
 
-            self.pago_service.eliminar(
+            self.service.eliminar(
                 pago_id
             )
 
-            QMessageBox.information(
-                self,
-                "OK",
-                "Pago eliminado correctamente"
-            )
-
-            self.cargar_datos()
+            self.cargar_pagos()
 
         except Exception as e:
 
@@ -577,4 +362,3 @@ class PagoView(QWidget):
                 "Error",
                 str(e)
             )
-            

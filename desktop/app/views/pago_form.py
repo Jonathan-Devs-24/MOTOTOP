@@ -1,231 +1,129 @@
 # desktop/app/views/pago_form.py
 
 from PyQt6.QtWidgets import (
-    QWidget,
+    QDialog,
     QVBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
-    QMessageBox,
-    QComboBox,
+    QComboBox
 )
 
 
-class PagoForm(QWidget):
+class PagoForm(QDialog):
 
-    def __init__(self, factura, pago_service, on_success, pago=None):
-        super().__init__()
+    def __init__(
+        self,
+        parent=None,
+        factura_id=None,
+        pago=None
+    ):
 
-        self.factura = factura
-        self.pago_service = pago_service
-        self.on_success = on_success
+        super().__init__(parent)
+
         self.pago = pago
+        self.factura_id = factura_id
 
-        self.setWindowTitle(
-            "Editar Pago"
-            if pago
-            else f"Nuevo Pago - Factura #{factura['id']}"
-        )
-
-        self.resize(400, 300)
+        self.setWindowTitle("Pago")
 
         layout = QVBoxLayout()
 
-        layout.addWidget(
-            QLabel(f"Factura #{factura['id']}")
-        )
+        # FACTURA
 
         layout.addWidget(
             QLabel(
-                f"Total: ${factura.get('total', 0)}"
+                f"Factura ID: {self.factura_id}"
             )
         )
+
+        # MONTO
 
         layout.addWidget(QLabel("Monto"))
 
-        self.monto = QLineEdit()
-        layout.addWidget(self.monto)
+        self.monto_input = QLineEdit()
 
-        layout.addWidget(
-            QLabel("Método de pago")
-        )
+        layout.addWidget(self.monto_input)
 
-        self.metodo_pago = QComboBox()
+        # METODO
 
-        self.metodo_pago.addItem(
-            "Efectivo",
-            "efectivo"
-        )
+        layout.addWidget(QLabel("Método"))
 
-        self.metodo_pago.addItem(
-            "Transferencia",
-            "transferencia"
-        )
+        self.metodo_combo = QComboBox()
 
-        self.metodo_pago.addItem(
-            "Tarjeta",
+        self.metodo_combo.addItems([
+            "efectivo",
+            "transferencia",
             "tarjeta"
-        )
+        ])
 
-        layout.addWidget(self.metodo_pago)
+        layout.addWidget(self.metodo_combo)
 
-        # Estado fijo en completado
-        layout.addWidget(
-            QLabel("Estado")
-        )
+        # ESTADO
 
-        self.estado = QComboBox()
+        layout.addWidget(QLabel("Estado"))
 
-        self.estado.addItem(
-            "Completado",
-            "completado"
-        )
+        self.estado_combo = QComboBox()
 
-        self.estado.setEnabled(False)
+        self.estado_combo.addItems([
+            "pendiente",
+            "completado",
+            "fallido"
+        ])
 
-        layout.addWidget(self.estado)
+        layout.addWidget(self.estado_combo)
+
+        # REFERENCIA
 
         layout.addWidget(QLabel("Referencia"))
 
-        self.referencia = QLineEdit()
-        layout.addWidget(self.referencia)
+        self.referencia_input = QLineEdit()
 
-        self.btn_guardar = QPushButton("Guardar")
-        self.btn_guardar.clicked.connect(self.save)
+        layout.addWidget(self.referencia_input)
+
+        # BOTON
+
+        self.btn_guardar = QPushButton(
+            "Guardar"
+        )
+
+        self.btn_guardar.clicked.connect(
+            self.accept
+        )
 
         layout.addWidget(self.btn_guardar)
 
-        layout.addStretch()
-
         self.setLayout(layout)
 
+        # EDICION
+
         if self.pago:
-            self.load_pago()
 
-    def load_pago(self):
-
-        self.monto.setText(
-            str(
-                self.pago.get("monto", "")
-            )
-        )
-
-        self.referencia.setText(
-            self.pago.get("referencia") or ""
-        )
-
-        metodo = self.pago.get(
-            "metodo_pago"
-        )
-
-        index = self.metodo_pago.findData(
-            metodo
-        )
-
-        if index >= 0:
-            self.metodo_pago.setCurrentIndex(
-                index
+            self.monto_input.setText(
+                str(self.pago["monto"])
             )
 
-    def validate_data(self):
-
-        monto_text = self.monto.text().strip()
-
-        if not monto_text:
-            raise ValueError(
-                "Debe ingresar el monto"
+            self.metodo_combo.setCurrentText(
+                self.pago["metodo_pago"]
             )
 
-        try:
-            monto = float(monto_text)
-
-        except ValueError:
-            raise ValueError(
-                "El monto debe ser numérico"
+            self.estado_combo.setCurrentText(
+                self.pago["estado"]
             )
 
-        if monto <= 0:
-            raise ValueError(
-                "El monto debe ser mayor a cero"
+            self.referencia_input.setText(
+                str(
+                    self.pago["referencia"] or ""
+                )
             )
 
-    def build_data(self):
+    def obtener_datos(self):
 
         return {
-            "factura": self.factura["id"],
+            "factura": self.factura_id,
             "monto": float(
-                self.monto.text().strip()
+                self.monto_input.text()
             ),
-            "metodo_pago": self.metodo_pago.currentData(),
-            "estado": "completado",
-            "referencia": self.referencia.text().strip() or None,
+            "metodo_pago": self.metodo_combo.currentText(),
+            "estado": self.estado_combo.currentText(),
+            "referencia": self.referencia_input.text()
         }
-
-    def save(self):
-
-        try:
-            self.validate_data()
-
-            data = self.build_data()
-
-            if self.pago:
-
-                self.pago_service.actualizar(
-                    self.pago["id"],
-                    data
-                )
-
-                QMessageBox.information(
-                    self,
-                    "OK",
-                    "Pago actualizado correctamente"
-                )
-
-            else:
-
-                self.pago_service.crear(data)
-
-                QMessageBox.information(
-                    self,
-                    "OK",
-                    "Pago registrado correctamente"
-                )
-
-            # Refrescar vista principal
-            self.on_success()
-
-            # Forzar repaint
-            parent = self.parent()
-
-            if parent:
-                parent.update()
-                parent.repaint()
-
-            self.close()
-
-        except ValueError as e:
-
-            QMessageBox.warning(
-                self,
-                "Validación",
-                str(e)
-            )
-
-        except Exception as e:
-
-            error_text = str(e)
-
-            if hasattr(e, "response") and e.response is not None:
-
-                try:
-                    error_text = str(
-                        e.response.json()
-                    )
-                except:
-                    error_text = e.response.text
-
-            QMessageBox.critical(
-                self,
-                "Error",
-                error_text
-            )
