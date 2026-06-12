@@ -50,8 +50,10 @@ from views.pedido_view import PedidoView
 
 from services.compra_service import CompraService
 from services.factura_service import FacturaService
+from services.informe_service import InformeService
 from views.compra_view import CompraView
 from views.factura_view import FacturaView
+from views.informe_view import InformeView
 
 
 # =========================
@@ -101,6 +103,10 @@ class MainWindow(QWidget):
         )
 
         self.factura_service = FacturaService(
+            self.http
+        )
+
+        self.informe_service = InformeService(
             self.http
         )
         
@@ -200,8 +206,8 @@ class MainWindow(QWidget):
             self.envio_service
         )
 
-        self.view_informes = QLabel(
-            "Módulo Informes"
+        self.view_informes = InformeView(
+            self.informe_service
         )
 
         # =========================
