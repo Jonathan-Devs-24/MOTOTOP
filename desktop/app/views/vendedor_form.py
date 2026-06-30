@@ -3,13 +3,17 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QFormLayout,
     QLineEdit,
     QPushButton,
     QComboBox,
     QLabel,
     QMessageBox,
     QInputDialog,
+    QGroupBox,
 )
+from PyQt6.QtGui import QDoubleValidator
+from PyQt6.QtCore import Qt
 
 
 class VendedorForm(QWidget):
@@ -30,119 +34,179 @@ class VendedorForm(QWidget):
         self.on_success = on_success
         self.vendedor = vendedor
 
-        self.setWindowTitle(
-            "Editar Vendedor" if vendedor else "Nuevo Vendedor"
-        )
-        self.resize(500, 700)
-
+        self.setWindowTitle("Editar Vendedor" if vendedor else "Nuevo Vendedor")
+        self.resize(480, 650)
+        
         self.zonas = []
+        self.init_ui()
 
-        layout = QVBoxLayout()
+    def init_ui(self):
+        # Estilos generales del formulario y componentes
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #F5F5F5;
+                font-size: 13px;
+                color: #333333;
+            }
+            QGroupBox {
+                background-color: #FFFFFF;
+                border: 1px solid #D8D8D8;
+                border-radius: 6px;
+                margin-top: 15px;
+                font-weight: bold;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                left: 15px;
+                padding: 0 5px;
+                color: #2196F3;
+            }
+            QLineEdit, QComboBox {
+                background-color: #FFFFFF;
+                border: 1px solid #CCCCCC;
+                border-radius: 4px;
+                padding: 6px;
+                min-height: 20px;
+            }
+            QLineEdit:focus, QComboBox:focus {
+                border: 1px solid #2196F3;
+            }
+            QPushButton#btn_save {
+                background-color: #4CAF50;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border: none;
+                border-radius: 4px;
+                padding: 10px;
+                min-height: 25px;
+            }
+            QPushButton#btn_save:hover {
+                background-color: #43A047;
+            }
+        """)
+
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 10, 20, 20)
+        main_layout.setSpacing(15)
 
         # =========================
         # DATOS PERSONALES
         # =========================
+        group_personal = QGroupBox("Datos Personales")
+        form_personal = QFormLayout()
+        form_personal.setSpacing(10)
+        form_personal.setContentsMargins(15, 15, 15, 15)
 
-        layout.addWidget(QLabel("Nombre"))
         self.nombre = QLineEdit()
-        layout.addWidget(self.nombre)
-
-        layout.addWidget(QLabel("Apellido"))
         self.apellido = QLineEdit()
-        layout.addWidget(self.apellido)
-
-        layout.addWidget(QLabel("Teléfono"))
         self.telefono = QLineEdit()
-        layout.addWidget(self.telefono)
-
-        layout.addWidget(QLabel("Comisión"))
+        
         self.comision = QLineEdit()
-        self.comision.setPlaceholderText("Ejemplo: 10.50")
-        layout.addWidget(self.comision)
+        self.comision.setPlaceholderText("0.00")
+        # Validador numérico estricto para la comisión (2 decimales)
+        validador_comision = QDoubleValidator(0.00, 100.00, 2, self)
+        validador_comision.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.comision.setValidator(validador_comision)
 
-        # =========================
-        # ESTADO
-        # =========================
-
-        layout.addWidget(QLabel("Estado"))
         self.estado = QComboBox()
         self.estado.addItem("Activo", "activo")
         self.estado.addItem("Inactivo", "inactivo")
-        layout.addWidget(self.estado)
+
+        form_personal.addRow("Nombre:", self.nombre)
+        form_personal.addRow("Apellido:", self.apellido)
+        form_personal.addRow("Teléfono:", self.telefono)
+        form_personal.addRow("Comisión (%):", self.comision)
+        form_personal.addRow("Estado:", self.estado)
+        group_personal.setLayout(form_personal)
+        main_layout.addWidget(group_personal)
 
         # =========================
-        # ZONA
+        # ASIGNACIÓN DE ZONA
         # =========================
+        group_zona = QGroupBox("Ubicación y Zona")
+        form_zona = QFormLayout()
+        form_zona.setContentsMargins(15, 15, 15, 15)
 
-        zona_layout = QHBoxLayout()
-
-        zona_layout.addWidget(QLabel("Zona"))
+        zona_container = QHBoxLayout()
         self.zona = QComboBox()
-        zona_layout.addWidget(self.zona)
-
+        self.zona.setSizePolicy(self.zona.sizePolicy().Policy.Expanding, self.zona.sizePolicy().Policy.Fixed)
+        
         self.btn_add_zona = QPushButton("+")
-        self.btn_add_zona.setMaximumWidth(40)
+        self.btn_add_zona.setFixedWidth(36)
+        self.btn_add_zona.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                color: white;
+                font-weight: bold;
+                border: none;
+                border-radius: 4px;
+                padding: 6px;
+            }
+            QPushButton:hover {
+                background-color: #0b7dda;
+            }
+            QPushButton:disabled {
+                background-color: #BDBDBD;
+            }
+        """)
         self.btn_add_zona.clicked.connect(self.add_new_zona)
-        zona_layout.addWidget(self.btn_add_zona)
+        
+        zona_container.addWidget(self.zona)
+        zona_container.addWidget(self.btn_add_zona)
 
-        layout.addLayout(zona_layout)
+        form_zona.addRow("Zona Asignada:", zona_container)
+        group_zona.setLayout(form_zona)
+        main_layout.addWidget(group_zona)
 
         # =========================
-        # CREDENCIALES
+        # CREDENCIALES DE ACCESO
         # =========================
+        self.group_credentials = QGroupBox("Credenciales de Acceso")
+        form_credentials = QFormLayout()
+        form_credentials.setSpacing(10)
+        form_credentials.setContentsMargins(15, 15, 15, 15)
 
-        layout.addWidget(QLabel("Nombre de usuario"))
         self.username = QLineEdit()
-        layout.addWidget(self.username)
-
-        layout.addWidget(QLabel("Contraseña"))
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
-        layout.addWidget(self.password)
+
+        form_credentials.addRow("Usuario:", self.username)
+        form_credentials.addRow("Contraseña:", self.password)
+        self.group_credentials.setLayout(form_credentials)
+        main_layout.addWidget(self.group_credentials)
 
         # =========================
-        # BOTÓN GUARDAR
+        # ACCIONES
         # =========================
-
         self.btn_save = QPushButton("Guardar")
+        self.btn_save.setObjectName("btn_save")
         self.btn_save.clicked.connect(self.save)
-        layout.addWidget(self.btn_save)
+        
+        main_layout.addStretch()
+        main_layout.addWidget(self.btn_save)
 
-        layout.addStretch()
+        self.setLayout(main_layout)
 
-        self.setLayout(layout)
-
-        # =========================
-        # CARGA INICIAL
-        # =========================
-
+        # Cargas iniciales obligatorias
         self.load_zonas()
 
         if self.vendedor:
             self.load_vendedor()
 
-    # ======================================================
-    # CARGAR ZONAS
-    # ======================================================
-
     def load_zonas(self):
         try:
             self.zona.clear()
-
             data = self.zona_service.listar()
             zonas = data.get("results", data)
-
             self.zonas = zonas
 
             for z in zonas:
                 self.zona.addItem(z["nombre"], z["id"])
-
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
-
-    # ======================================================
-    # CARGAR DATOS PARA EDICIÓN
-    # ======================================================
+            QMessageBox.critical(self, "Error", f"Error al cargar zonas: {str(e)}")
 
     def load_vendedor(self):
         v = self.vendedor
@@ -152,107 +216,72 @@ class VendedorForm(QWidget):
         self.telefono.setText(v.get("telefono", ""))
         self.comision.setText(str(v.get("comision", "")))
 
-        # Estado
-        estado_value = v.get("estado", "activo")
-        index_estado = self.estado.findData(estado_value)
+        index_estado = self.estado.findData(v.get("estado", "activo"))
         if index_estado >= 0:
             self.estado.setCurrentIndex(index_estado)
 
-        # Zona
-        zona_id = v.get("zona")
-        index_zona = self.zona.findData(zona_id)
+        index_zona = self.zona.findData(v.get("zona"))
         if index_zona >= 0:
             self.zona.setCurrentIndex(index_zona)
 
-        # Cargar datos del usuario
         usuario_id = v.get("usuario")
         if usuario_id:
             try:
                 usuario_data = self.user_service.obtener(usuario_id)
                 self.username.setText(usuario_data.get("username", ""))
-                # La contraseña está hasheada, mostrar un mensaje
-                self.password.setText("[Contraseña hasheada en el servidor]")
-            except Exception as e:
+                self.password.setText("••••••••")
+            except Exception:
                 self.username.setText("[No disponible]")
                 self.password.setText("[No disponible]")
 
-        # En edición mostrar credenciales en modo lectura
+        # Configuración de modo lectura para edición
         self.username.setReadOnly(True)
         self.password.setReadOnly(True)
-        # Mostrar contraseña en modo lectura (no oculta)
         self.password.setEchoMode(QLineEdit.EchoMode.Normal)
-        # Desabilitar agregar zona nueva en edición
         self.btn_add_zona.setDisabled(True)
-
-    # ======================================================
-    # AGREGAR NUEVA ZONA
-    # ======================================================
+        self.group_credentials.setTitle("Credenciales de Acceso (Modo Lectura)")
 
     def add_new_zona(self):
         text, ok = QInputDialog.getText(
-            self,
-            "Agregar Zona",
-            "Nombre de la zona:"
+            self, "Nueva Zona", "Ingrese el nombre de la nueva zona comercial:"
         )
 
         if ok and text.strip():
             try:
-                nueva_zona = self.zona_service.crear(
-                    {
-                        "nombre": text.strip(),
-                        "descripcion": ""
-                    }
-                )
-
-                # Recargar zonas
+                nueva_zona = self.zona_service.crear({
+                    "nombre": text.strip(),
+                    "descripcion": ""
+                })
                 self.load_zonas()
-
-                # Seleccionar la zona recién creada
+                
                 index = self.zona.findData(nueva_zona["id"])
                 if index >= 0:
                     self.zona.setCurrentIndex(index)
-
-                QMessageBox.information(
-                    self,
-                    "OK",
-                    f"Zona '{text.strip()}' creada correctamente",
-                )
-
             except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
-
-    # ======================================================
-    # VALIDACIÓN
-    # ======================================================
+                QMessageBox.critical(self, "Error", f"No se pudo crear la zona: {str(e)}")
 
     def validate_data(self):
-        nombre = self.nombre.text().strip()
-        username = self.username.text().strip()
-        password = self.password.text().strip()
-
-        if not nombre:
-            raise ValueError("El nombre es obligatorio")
+        if not self.nombre.text().strip():
+            raise ValueError("El campo 'Nombre' es obligatorio.")
 
         if self.zona.currentData() is None:
-            raise ValueError("Debe seleccionar una zona")
+            raise ValueError("Debe seleccionar o registrar una zona válida.")
 
         if not self.vendedor:
-            if not username:
-                raise ValueError("El nombre de usuario es obligatorio")
-
-            if not password:
-                raise ValueError("La contraseña es obligatoria")
-
-    # ======================================================
-    # OBTENER DATOS DEL FORMULARIO
-    # ======================================================
+            if not self.username.text().strip():
+                raise ValueError("El 'Nombre de usuario' es obligatorio para nuevos vendedores.")
+            if not self.password.text().strip():
+                raise ValueError("La 'Contraseña' es obligatoria para nuevos vendedores.")
 
     def build_vendedor_data(self, user_id=None):
+        # Normalización del separador decimal para evitar fallos de persistencia
+        comision_val = self.comision.text().strip().replace(",", ".")
+        
         data = {
             "nombre": self.nombre.text().strip(),
             "apellido": self.apellido.text().strip(),
             "telefono": self.telefono.text().strip(),
-            "comision": self.comision.text().strip() or "0",
+            "comision": comision_val if comision_val else "0.00",
             "estado": self.estado.currentData(),
             "zona": self.zona.currentData(),
         }
@@ -262,63 +291,28 @@ class VendedorForm(QWidget):
 
         return data
 
-    # ======================================================
-    # GUARDAR
-    # ======================================================
-
     def save(self):
         try:
             self.validate_data()
 
-            # ==========================================
-            # EDICIÓN
-            # ==========================================
             if self.vendedor:
                 data = self.build_vendedor_data()
-
-                self.vendedor_service.actualizar(
-                    self.vendedor["id"],
-                    data,
-                )
-
-                QMessageBox.information(
-                    self,
-                    "OK",
-                    "Vendedor actualizado correctamente",
-                )
-
-            # ==========================================
-            # CREACIÓN
-            # ==========================================
+                self.vendedor_service.actualizar(self.vendedor["id"], data)
+                QMessageBox.information(self, "Éxito", "Registro de vendedor actualizado.")
             else:
-                # 1. Crear usuario
-                user = self.user_service.crear(
-                    {
-                        "username": self.username.text().strip(),
-                        "password": self.password.text().strip(),
-                    }
-                )
+                user = self.user_service.crear({
+                    "username": self.username.text().strip(),
+                    "password": self.password.text().strip(),
+                })
 
-                # 2. Crear vendedor
-                vendedor_data = self.build_vendedor_data(
-                    user_id=user["id"]
-                )
-
+                vendedor_data = self.build_vendedor_data(user_id=user["id"])
                 self.vendedor_service.crear(vendedor_data)
+                QMessageBox.information(self, "Éxito", "Nuevo vendedor registrado correctamente.")
 
-                QMessageBox.information(
-                    self,
-                    "OK",
-                    "Vendedor creado correctamente",
-                )
-
-            # Refrescar lista y cerrar
             self.on_success()
             self.close()
 
         except ValueError as e:
-            QMessageBox.warning(self, "Validación", str(e))
-
+            QMessageBox.warning(self, "Validación de Datos", str(e))
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
-
+            QMessageBox.critical(self, "Error de Persistencia", str(e))

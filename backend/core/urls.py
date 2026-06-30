@@ -17,6 +17,7 @@ router.register(r'envios', EnvioViewSet)
 router.register(r'promociones', PromocionViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'producto-promociones', ProductoPromocionViewSet)
+router.register(r'informes', InformeViewSet, basename='informes')
 
 urlpatterns = router.urls
 

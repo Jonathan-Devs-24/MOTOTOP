@@ -1,6 +1,7 @@
 # backend/core/views.py
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import (
@@ -11,6 +12,9 @@ from .models import (
 )
 from .serializers import *
 from django.contrib.auth.models import User
+from django.db.models import Sum, F, Q, Value, DecimalField, IntegerField
+from django.db.models.functions import Coalesce
+from datetime import datetime
 
 
 class PedidoViewSet(viewsets.ModelViewSet):
@@ -217,4 +221,153 @@ class ProductoPromocionViewSet(viewsets.ModelViewSet):
     queryset = ProductoPromocion.objects.all()
     serializer_class = ProductoPromocionSerializer
     permission_classes = [AllowAny]  # Sin autenticación para el desktop
+
+
+class InformeViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
+    def _parse_date(self, value, default=None):
+        if not value:
+            return default
+        try:
+            return datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            raise ValidationError('Formato de fecha inválido, use YYYY-MM-DD')
+
+    def _get_date_range(self, request):
+        fecha_inicio = request.query_params.get('fecha_inicio')
+        fecha_fin = request.query_params.get('fecha_fin')
+        inicio = self._parse_date(fecha_inicio)
+        fin = self._parse_date(fecha_fin)
+        if inicio and fin:
+            fin = fin.replace(hour=23, minute=59, second=59)
+        return inicio, fin
+
+    def _filter_periodo(self, queryset, fecha_campo, inicio, fin):
+        if inicio:
+            queryset = queryset.filter(**{f'{fecha_campo}__gte': inicio})
+        if fin:
+            queryset = queryset.filter(**{f'{fecha_campo}__lte': fin})
+        return queryset
+
+    @action(detail=False, methods=['get'], url_path='venta-por-vendedor')
+    def venta_por_vendedor(self, request):
+        inicio, fin = self._get_date_range(request)
+        pedidos = Pedido.objects.filter(estado='confirmado')
+        pedidos = self._filter_periodo(pedidos, 'fecha_pedido', inicio, fin)
+        valores = pedidos.values(
+            'vendedor',
+            'vendedor__nombre',
+            'vendedor__apellido'
+        ).annotate(total_ventas=Coalesce(Sum('total'), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2))).order_by('-total_ventas')
+
+        data = [
+            {
+                'vendedor_id': item['vendedor'],
+                'vendedor_nombre': f"{item['vendedor__nombre']} {item['vendedor__apellido'] or ''}".strip(),
+                'total_ventas': item['total_ventas']
+            }
+            for item in valores
+        ]
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='ventas')
+    def ventas(self, request):
+        inicio, fin = self._get_date_range(request)
+        pedidos = Pedido.objects.filter(estado='confirmado')
+        pedidos = self._filter_periodo(pedidos, 'fecha_pedido', inicio, fin)
+        total_ventas = pedidos.aggregate(total=Coalesce(Sum('total'), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2)))['total']
+        return Response({'total_ventas': total_ventas, 'fecha_inicio': request.query_params.get('fecha_inicio'), 'fecha_fin': request.query_params.get('fecha_fin')})
+
+    @action(detail=False, methods=['get'], url_path='pedidos-pendientes-envio')
+    def pedidos_pendientes_envio(self, request):
+        pedidos = Pedido.objects.filter(estado='confirmado').exclude(envio__estado_envio='entregado')
+        serializer = PedidoReadSerializer(pedidos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='saldo-clientes')
+    def saldo_clientes(self, request):
+        clientes = Cliente.objects.annotate(
+            total_facturado=Coalesce(Sum('pedido__factura__total', distinct=True), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2)),
+            total_pagado=Coalesce(Sum('pedido__factura__pagos__monto', filter=Q(pedido__factura__pagos__estado='completado')), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2))
+        ).annotate(saldo=F('total_facturado') - F('total_pagado')).order_by('-saldo')
+
+        data = [
+            {
+                'cliente_id': cliente.id,
+                'cliente_nombre': str(cliente),
+                'total_facturado': cliente.total_facturado,
+                'total_pagado': cliente.total_pagado,
+                'saldo': cliente.saldo
+            }
+            for cliente in clientes
+        ]
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='facturas-pendientes-cobro')
+    def facturas_pendientes_cobro(self, request):
+        facturas = Factura.objects.annotate(
+            total_pagado=Coalesce(Sum('pagos__monto', filter=Q(pagos__estado='completado')), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2))
+        ).filter(total_pagado__lt=F('total'))
+
+        data = [
+            {
+                'factura_id': factura.id,
+                'pedido_id': factura.pedido_id,
+                'cliente_nombre': str(factura.pedido.cliente),
+                'total': factura.total,
+                'total_pagado': factura.total_pagado,
+                'saldo': factura.total - factura.total_pagado
+            }
+            for factura in facturas
+        ]
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='ventas-por-zona')
+    def ventas_por_zona(self, request):
+        inicio, fin = self._get_date_range(request)
+        pedidos = Pedido.objects.filter(estado='confirmado')
+        pedidos = self._filter_periodo(pedidos, 'fecha_pedido', inicio, fin)
+        valores = pedidos.values(
+            'vendedor__zona__id',
+            'vendedor__zona__nombre'
+        ).annotate(total_ventas=Coalesce(Sum('total'), 0)).order_by('-total_ventas')
+
+        data = [
+            {
+                'zona_id': item['vendedor__zona__id'],
+                'zona_nombre': item['vendedor__zona__nombre'],
+                'total_ventas': item['total_ventas']
+            }
+            for item in valores
+        ]
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='productos-mas-vendidos')
+    def productos_mas_vendidos(self, request):
+        top = request.query_params.get('top')
+        try:
+            top = int(top) if top else 10
+        except ValueError:
+            return Response({'error': 'El parámetro top debe ser un número'}, status=status.HTTP_400_BAD_REQUEST)
+
+        detalles = DetallePedido.objects.filter(pedido__estado='confirmado')
+        valores = detalles.values(
+            'producto__id',
+            'producto__nombre'
+        ).annotate(
+            cantidad_vendida=Coalesce(Sum('cantidad'), Value(0), output_field=IntegerField()),
+            total_ventas=Coalesce(Sum(F('cantidad') * F('precio_unitario')), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2))
+        ).order_by('-cantidad_vendida')[:top]
+
+        data = [
+            {
+                'producto_id': item['producto__id'],
+                'producto_nombre': item['producto__nombre'],
+                'cantidad_vendida': item['cantidad_vendida'],
+                'total_ventas': item['total_ventas']
+            }
+            for item in valores
+        ]
+        return Response(data)
     

@@ -118,7 +118,7 @@ class MainWindow(QWidget):
         logo_label.setPixmap(scaled_pixmap)
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter) # Centrar el logo
         
-        # Espaciado inferior opcional para que no quede pegado al primer botón
+        # Espaciado inferior para que no quede pegado al primer botón
         logo_label.setStyleSheet("margin-bottom: 15px;") 
         
         sidebar_layout.addWidget(logo_label)

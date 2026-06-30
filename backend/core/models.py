@@ -285,14 +285,37 @@ class Factura(models.Model):
 
         self.total = total
         self.save(update_fields=['total'])
-        
-    # Estado de factura (pagada o no)
-    def esta_pagada(self):
+    
+    # Calcular total pagado
+    def calcular_monto_pagado(self):
         total_pagado = self.pagos.filter(estado='completado').aggregate(
             total=Sum('monto')
         )['total'] or 0
-
-        return total_pagado >= self.total
+        return total_pagado
+    
+    # Calcular monto pendiente
+    def calcular_pendiente(self):
+        return self.total - self.calcular_monto_pagado()
+        
+    # Estado de factura (pagada, parcialmente pagada o impaga)
+    def esta_pagada(self):
+        total_pagado = self.calcular_monto_pagado()
+        
+        if total_pagado >= self.total:
+            return True
+        return False
+    
+    # Estado detallado de pago
+    def get_estado_pago(self):
+        total_pagado = self.calcular_monto_pagado()
+        pendiente = self.calcular_pendiente()
+        
+        if pendiente <= 0:
+            return 'pagada'
+        elif total_pagado > 0:
+            return 'parcialmente_pagada'
+        else:
+            return 'impaga'
 
 
     def save(self, *args, **kwargs):
@@ -331,7 +354,7 @@ class Pago(models.Model):
     ]
 
     ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
+        ('procesando', 'Procesando'),
         ('completado', 'Completado'),
         ('fallido', 'Fallido'),
     ]
@@ -340,10 +363,31 @@ class Pago(models.Model):
 
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     metodo_pago = models.CharField(max_length=20, choices=METODO_CHOICES)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='procesando')
 
     fecha_pago = models.DateTimeField(auto_now_add=True)
     referencia = models.CharField(max_length=100, blank=True, null=True)
+    
+    def clean(self):
+        # Validar que el monto no supere el pendiente
+        if self.estado == 'completado':
+            pendiente = self.factura.calcular_pendiente()
+            
+            if self.id:
+                # Si es una actualización, excluir este pago del cálculo
+                pendiente += self.monto
+            
+            if self.monto > pendiente:
+                raise ValidationError(
+                    f"El monto no puede superar lo pendiente por pagar (${pendiente})"
+                )
+        
+        if self.monto <= 0:
+            raise ValidationError("El monto debe ser mayor a 0")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Pago #{self.id} - {self.factura}"

@@ -216,19 +216,30 @@ class DetalleFacturaReadSerializer(serializers.ModelSerializer):
 class FacturaReadSerializer(serializers.ModelSerializer):
     detalles = DetalleFacturaReadSerializer(many=True)
     pagada = serializers.SerializerMethodField()
+    monto_pagado = serializers.SerializerMethodField()
+    monto_pendiente = serializers.SerializerMethodField()
+    estado_pago = serializers.SerializerMethodField()
 
     class Meta:
         model = Factura
-        fields = ['id', 'pedido', 'fecha_emision', 'total', 'detalles', 'pagada']
+        fields = ['id', 'pedido', 'fecha_emision', 'total', 'detalles', 'pagada', 'monto_pagado', 'monto_pendiente', 'estado_pago']
 
     def get_pagada(self, obj):
         return obj.esta_pagada()
+    
+    def get_monto_pagado(self, obj):
+        return obj.calcular_monto_pagado()
+    
+    def get_monto_pendiente(self, obj):
+        return obj.calcular_pendiente()
+    
+    def get_estado_pago(self, obj):
+        return obj.get_estado_pago()
              
 # Pago
 class PagoSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
-
         factura = data.get('factura')
         monto = data.get('monto')
         estado = data.get('estado')
@@ -243,25 +254,18 @@ class PagoSerializer(serializers.ModelSerializer):
                 "El monto debe ser mayor a 0"
             )
 
-        total_pagado = factura.pagos.filter(
-            estado='completado'
-        )
-
-        if self.instance:
-            total_pagado = total_pagado.exclude(
-                id=self.instance.id
-            )
-
-        total_pagado = total_pagado.aggregate(
-            total=Sum('monto')
-        )['total'] or 0
-
-        nuevo_monto = monto if estado == 'completado' else 0
-
-        if total_pagado + nuevo_monto > factura.total:
-            raise serializers.ValidationError(
-                "El pago excede el total de la factura"
-            )
+        # Si el estado es completado, validar que no supere el pendiente
+        if estado == 'completado':
+            pendiente = factura.calcular_pendiente()
+            
+            if self.instance:
+                # Si es una actualización, agregar el monto anterior al pendiente
+                pendiente += self.instance.monto
+            
+            if monto > pendiente:
+                raise serializers.ValidationError(
+                    f"El monto (${monto}) no puede superar lo pendiente por pagar (${pendiente})"
+                )
 
         return data
 

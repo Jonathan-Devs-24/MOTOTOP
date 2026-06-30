@@ -7,7 +7,10 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QTableWidget,
     QTableWidgetItem,
+    QAbstractItemView,
+    QHeaderView,
 )
+from PyQt6.QtCore import Qt
 
 from services.cliente_service import ClienteService
 from services.zona_service import ZonaService
@@ -26,24 +29,36 @@ class ClienteView(QWidget):
         self.user_service = UserService(self.http)
         self.zonas_map = {}
 
-        layout = QVBoxLayout()
+        self.init_ui()
 
+    def init_ui(self):
+        # Corrección: Nombre unificado del layout principal con márgenes limpios
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(10)
+
+        # =========================
+        # TOP BAR
+        # =========================
         top_bar = QHBoxLayout()
-        self.btn_refresh = QPushButton("Recargar")
         self.btn_new = QPushButton("Nuevo Cliente")
+        self.btn_refresh = QPushButton("Recargar")
+
         self.btn_new.setStyleSheet("""
             QPushButton {
-                background-color: #2196F3;
+                background-color: #673AB7;
                 color: white;
                 border: none;
                 padding: 8px 16px;
                 border-radius: 4px;
                 font-weight: bold;
+                font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #0b7dda;
+                background-color: #5E35B1;
             }
         """)
+
         self.btn_refresh.setStyleSheet("""
             QPushButton {
                 background-color: #757575;
@@ -52,6 +67,7 @@ class ClienteView(QWidget):
                 padding: 8px 16px;
                 border-radius: 4px;
                 font-weight: bold;
+                font-size: 13px;
             }
             QPushButton:hover {
                 background-color: #616161;
@@ -63,8 +79,11 @@ class ClienteView(QWidget):
         top_bar.addStretch()
 
         self.btn_refresh.clicked.connect(self.load_data)
-        self.btn_new.clicked.connect(self.open_form)
+        self.btn_new.clicked.connect(self.open_form)  # Corrección: Conexión directa sin lambda innecesario
 
+        # =========================
+        # TABLA DE CLIENTES
+        # =========================
         self.table = QTableWidget()
         self.table.setColumnCount(13)
         self.table.setHorizontalHeaderLabels([
@@ -73,24 +92,53 @@ class ClienteView(QWidget):
             "Zona", "Usuario", "Acciones"
         ])
 
-        self.table.setColumnWidth(0, 40)
-        self.table.setColumnWidth(1, 120)
-        self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 100)
-        self.table.setColumnWidth(4, 100)
-        self.table.setColumnWidth(5, 140)
-        self.table.setColumnWidth(6, 150)
-        self.table.setColumnWidth(7, 80)
-        self.table.setColumnWidth(8, 100)
-        self.table.setColumnWidth(9, 100)
-        self.table.setColumnWidth(10, 120)
-        self.table.setColumnWidth(11, 120)
-        self.table.setColumnWidth(12, 160)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(True)
 
-        layout.addLayout(top_bar)
-        layout.addWidget(self.table)
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: #FFFFFF;
+                alternate-background-color: #F9F9F9;
+                gridline-color: #E0E0E0;
+                border: 1px solid #D8D8D8;
+                border-radius: 4px;
+                selection-background-color: #EDE7F6;
+                selection-color: #311B92;
+            }
+            QHeaderView::section {
+                background-color: #F5F5F5;
+                color: #333333;
+                padding: 6px;
+                font-weight: bold;
+                border: 1px solid #E0E0E0;
+            }
+        """)
 
-        self.setLayout(layout)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+
+        self.table.setColumnWidth(0, 40)    # ID
+        self.table.setColumnWidth(1, 110)   # Nombre
+        self.table.setColumnWidth(2, 110)   # Apellido
+        self.table.setColumnWidth(3, 90)    # Documento
+        self.table.setColumnWidth(4, 100)   # Teléfono
+        self.table.setColumnWidth(5, 140)   # Email
+        self.table.setColumnWidth(6, 140)   # Dirección
+        self.table.setColumnWidth(7, 60)    # CP
+        self.table.setColumnWidth(8, 100)   # Localidad
+        self.table.setColumnWidth(9, 100)   # Provincia
+        self.table.setColumnWidth(10, 110)  # Zona
+        self.table.setColumnWidth(11, 110)  # Usuario
+        self.table.setColumnWidth(12, 150)  # Acciones
+
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+
+        main_layout.addLayout(top_bar)
+        main_layout.addWidget(self.table)
+        self.setLayout(main_layout)
 
         self.load_data()
 
@@ -113,14 +161,21 @@ class ClienteView(QWidget):
             self.table.setRowCount(len(clientes))
 
             for row, cliente in enumerate(clientes):
-                self.table.setItem(row, 0, QTableWidgetItem(str(cliente.get("id", ""))))
+                id_item = QTableWidgetItem(str(cliente.get("id", "")))
+                id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setItem(row, 0, id_item)
+
                 self.table.setItem(row, 1, QTableWidgetItem(cliente.get("nombre", "")))
                 self.table.setItem(row, 2, QTableWidgetItem(cliente.get("apellido", "")))
                 self.table.setItem(row, 3, QTableWidgetItem(cliente.get("nro_documento", "")))
                 self.table.setItem(row, 4, QTableWidgetItem(cliente.get("telefono", "")))
                 self.table.setItem(row, 5, QTableWidgetItem(cliente.get("email", "")))
                 self.table.setItem(row, 6, QTableWidgetItem(cliente.get("direccion", "")))
-                self.table.setItem(row, 7, QTableWidgetItem(cliente.get("codigo_postal", "")))
+                
+                cp_item = QTableWidgetItem(cliente.get("codigo_postal", ""))
+                cp_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setItem(row, 7, cp_item)
+                
                 self.table.setItem(row, 8, QTableWidgetItem(cliente.get("localidad", "")))
                 self.table.setItem(row, 9, QTableWidgetItem(cliente.get("provincia", "")))
 
@@ -139,30 +194,55 @@ class ClienteView(QWidget):
 
                 self.table.setItem(row, 11, QTableWidgetItem(username))
 
+                # Contenedor de acciones
+                actions_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_widget)
+                actions_layout.setContentsMargins(4, 2, 4, 2)
+                actions_layout.setSpacing(6)
+
                 btn_edit = QPushButton("Editar")
-                btn_edit.setStyleSheet("background-color: #2196F3; color: white;")
+                btn_edit.setStyleSheet("""
+                    QPushButton {
+                        background-color: #673AB7;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 3px;
+                        font-weight: bold;
+                    }
+                    QPushButton:hover {
+                        background-color: #5E35B1;
+                    }
+                """)
                 btn_edit.clicked.connect(
                     lambda checked, c=cliente: self.open_form(c)
                 )
 
                 btn_delete = QPushButton("Eliminar")
-                btn_delete.setStyleSheet("background-color: #F44336; color: white;")
+                btn_delete.setStyleSheet("""
+                    QPushButton {
+                        background-color: #E53935;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 3px;
+                        font-weight: bold;
+                    }
+                    QPushButton:hover {
+                        background-color: #D32F2F;
+                    }
+                """)
                 btn_delete.clicked.connect(
-                    lambda checked, cid=cliente.get("id"), row=row: self.delete_cliente(cid, row)
+                    lambda checked, cid=cliente.get("id"), r=row: self.delete_cliente(cid, r)
                 )
 
-                actions_widget = QWidget()
-                actions_layout = QHBoxLayout()
-                actions_layout.setContentsMargins(0, 0, 0, 0)
-                actions_layout.setSpacing(4)
                 actions_layout.addWidget(btn_edit)
                 actions_layout.addWidget(btn_delete)
-                actions_widget.setLayout(actions_layout)
 
                 self.table.setCellWidget(row, 12, actions_widget)
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
+            QMessageBox.critical(self, "Error", f"Error al recuperar datos: {str(e)}")
 
     def open_form(self, cliente=None):
         self.form = ClienteForm(
@@ -180,8 +260,8 @@ class ClienteView(QWidget):
 
         confirm = QMessageBox.question(
             self,
-            "Eliminar cliente",
-            "¿Estás seguro de eliminar este cliente?",
+            "Confirmar Eliminación",
+            "¿Está seguro de que desea eliminar permanentemente este cliente?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
 
@@ -190,7 +270,7 @@ class ClienteView(QWidget):
 
         try:
             self.cliente_service.eliminar(cliente_id)
-            QMessageBox.information(self, "OK", "Cliente eliminado correctamente")
+            QMessageBox.information(self, "Operación Exitosa", "Cliente eliminado correctamente.")
             self.load_data()
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
+            QMessageBox.critical(self, "Error", f"No se pudo eliminar el registro: {str(e)}")
