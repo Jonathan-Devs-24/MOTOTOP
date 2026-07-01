@@ -385,9 +385,19 @@ class Pago(models.Model):
         if self.monto <= 0:
             raise ValidationError("El monto debe ser mayor a 0")
 
+
     def save(self, *args, **kwargs):
+        # 1. Ejecuta las validaciones
         self.full_clean()
+        
+        # 2. Guarda el pago en la base de datos
         super().save(*args, **kwargs)
+        
+        # 3. Fuerza a la factura a recalcularse y guardarse para reflejar el nuevo saldo
+        if self.factura:
+            # Al guardar la factura, Django actualizará los métodos calculados del Serializer
+            self.factura.save()
+            
 
     def __str__(self):
         return f"Pago #{self.id} - {self.factura}"

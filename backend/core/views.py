@@ -199,6 +199,14 @@ class FacturaViewSet(viewsets.ModelViewSet):
 class PagoViewSet(viewsets.ModelViewSet):
     queryset = Pago.objects.all()
     serializer_class = PagoSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Captura el parámetro ?factura= de la URL
+        factura_id = self.request.query_params.get('factura')
+        if factura_id is not None:
+            queryset = queryset.filter(factura_id=factura_id)
+        return queryset
 
 # EnvioViewSet
 class EnvioViewSet(viewsets.ModelViewSet):
