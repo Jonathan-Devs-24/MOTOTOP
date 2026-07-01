@@ -8,7 +8,78 @@ from PyQt6.QtWidgets import (
     QLabel,
     QMessageBox,
     QInputDialog,
+    QFormLayout,
+    QTabWidget
 )
+
+# --- NUEVO: Estilo visual moderno (QSS) ---
+ESTILO_MODERNO = """
+    QWidget {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        background-color: #f8f9fa;
+        color: #333333;
+    }
+    QLineEdit, QComboBox {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 6px 12px;
+        background-color: #ffffff;
+    }
+    QLineEdit:focus, QComboBox:focus {
+        border: 1px solid #0d6efd;
+        background-color: #fff;
+    }
+    QPushButton {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    QPushButton:hover {
+        background-color: #0b5ed7;
+    }
+    QPushButton:disabled {
+        background-color: #6c757d;
+    }
+    QPushButton#btn_add_zona {
+        background-color: #198754;
+    }
+    QPushButton#btn_add_zona:hover {
+        background-color: #157347;
+    }
+    QTabWidget::pane {
+        border: 1px solid #dee2e6;
+        background: #ffffff;
+        border-radius: 4px;
+    }
+    QTabBar::tab {
+        background: #e9ecef;
+        padding: 8px 16px;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        margin-right: 2px;
+    }
+    QTabBar::tab:selected {
+        background: #ffffff;
+        border-bottom: 2px solid #0d6efd;
+        font-weight: bold;
+    }
+    QPushButton#btn_guardar {
+    background-color: #6f42c1;  /* Morado principal */
+    color: white;
+    }
+
+    QPushButton#btn_guardar:hover {
+        background-color: #59359a;  /* Morado más oscuro al pasar el mouse */
+    }
+
+    QPushButton#btn_guardar:pressed {
+        background-color: #492a80;  /* Morado aún más oscuro al hacer clic */
+    }
+"""
 
 
 class ClienteForm(QWidget):
@@ -36,73 +107,102 @@ class ClienteForm(QWidget):
 
         self.zonas = []
 
-        layout = QVBoxLayout()
+        # --- REEMPLAZAR DENTRO DE __init__ ---
+        self.setWindowTitle("Editar Cliente" if cliente else "Nuevo Cliente")
+        self.resize(500, 450)  # Al usar pestañas, podemos reducir el tamaño vertical de 800 a 450
+        self.setStyleSheet(ESTILO_MODERNO) # Aplicamos el diseño visual
 
-        layout.addWidget(QLabel("Nombre"))
+        self.zonas = []
+
+        # Layout Principal de la ventana
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(15)
+
+        # Creamos el contenedor de pestañas
+        tabs = QTabWidget()
+
+        # ==========================================
+        # PESTAÑA 1: DATOS PERSONALES
+        # ==========================================
+        tab_personales = QWidget()
+        form_personales = QFormLayout(tab_personales)
+        form_personales.setSpacing(10)
+
         self.nombre = QLineEdit()
-        layout.addWidget(self.nombre)
-
-        layout.addWidget(QLabel("Apellido"))
         self.apellido = QLineEdit()
-        layout.addWidget(self.apellido)
-
-        layout.addWidget(QLabel("Nro. documento"))
         self.nro_documento = QLineEdit()
-        layout.addWidget(self.nro_documento)
-
-        layout.addWidget(QLabel("Teléfono"))
         self.telefono = QLineEdit()
-        layout.addWidget(self.telefono)
-
-        layout.addWidget(QLabel("Email"))
         self.email = QLineEdit()
-        layout.addWidget(self.email)
 
-        layout.addWidget(QLabel("Dirección"))
+        form_personales.addRow("Nombre:", self.nombre)
+        form_personales.addRow("Apellido:", self.apellido)
+        form_personales.addRow("Nro. Documento:", self.nro_documento)
+        form_personales.addRow("Teléfono:", self.telefono)
+        form_personales.addRow("Email:", self.email)
+        
+        tabs.addTab(tab_personales, "Datos Personales")
+
+        # ==========================================
+        # PESTAÑA 2: UBICACIÓN Y ZONA
+        # ==========================================
+        tab_ubicacion = QWidget()
+        form_ubicacion = QFormLayout(tab_ubicacion)
+        form_ubicacion.setSpacing(10)
+
         self.direccion = QLineEdit()
-        layout.addWidget(self.direccion)
-
-        layout.addWidget(QLabel("Código Postal"))
         self.codigo_postal = QLineEdit()
-        layout.addWidget(self.codigo_postal)
-
-        layout.addWidget(QLabel("Localidad"))
         self.localidad = QLineEdit()
-        layout.addWidget(self.localidad)
-
-        layout.addWidget(QLabel("Provincia"))
         self.provincia = QLineEdit()
-        layout.addWidget(self.provincia)
 
+        # Sub-layout horizontal para la Zona y su botón "+"
         zona_layout = QHBoxLayout()
-        zona_layout.addWidget(QLabel("Zona"))
         self.zona = QComboBox()
-        zona_layout.addWidget(self.zona)
-
         self.btn_add_zona = QPushButton("+")
-        self.btn_add_zona.setMaximumWidth(40)
+        self.btn_add_zona.setObjectName("btn_add_zona") # ID para el estilo CSS
+        self.btn_add_zona.setFixedWidth(35)
         self.btn_add_zona.clicked.connect(self.add_new_zona)
+        zona_layout.addWidget(self.zona)
         zona_layout.addWidget(self.btn_add_zona)
-        layout.addLayout(zona_layout)
 
-        layout.addWidget(QLabel("Nombre de usuario (opcional)"))
+        form_ubicacion.addRow("Dirección:", self.direccion)
+        form_ubicacion.addRow("Código Postal:", self.codigo_postal)
+        form_ubicacion.addRow("Localidad:", self.localidad)
+        form_ubicacion.addRow("Provincia:", self.provincia)
+        form_ubicacion.addRow("Zona:", zona_layout)
+
+        tabs.addTab(tab_ubicacion, "Ubicación")
+
+        # ==========================================
+        # PESTAÑA 3: CUENTA DE USUARIO
+        # ==========================================
+        tab_cuenta = QWidget()
+        form_cuenta = QFormLayout(tab_cuenta)
+        form_cuenta.setSpacing(10)
+
         self.username = QLineEdit()
-        layout.addWidget(self.username)
-
-        layout.addWidget(QLabel("Contraseña (opcional)"))
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
-        layout.addWidget(self.password)
 
-        self.btn_save = QPushButton("Guardar")
+        form_cuenta.addRow("Usuario (opcional):", self.username)
+        form_cuenta.addRow("Contraseña:", self.password)
+
+        tabs.addTab(tab_cuenta, "Usuario y Acceso")
+
+        # Agregar el contenedor de pestañas al layout principal
+        main_layout.addWidget(tabs)
+
+        # Botón de Guardar en la parte inferior (fuera de las pestañas)
+        self.btn_save = QPushButton("Guardar Datos del Cliente")
+        self.btn_save.setObjectName("btn_guardar")
+        self.btn_save.setFixedHeight(40) # Más alto para denotar acción principal
         self.btn_save.clicked.connect(self.save)
-        layout.addWidget(self.btn_save)
+        main_layout.addWidget(self.btn_save)
 
-        layout.addStretch()
-
-        self.setLayout(layout)
+        self.setLayout(main_layout)
 
         self.load_zonas()
+        # --- FIN  ---
 
         if self.cliente:
             self.load_cliente()

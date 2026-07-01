@@ -1,3 +1,4 @@
+# C:\Users\jonat\MotoTop\desktop\app\views\pedido_card.py
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -12,6 +13,100 @@ from PyQt6.QtGui import QFont
 from views.factura_dialog import FacturaDialog
 
 
+ESTILO_CARD_PEDIDO = """
+QWidget#contenedor_card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+QLabel {
+    color: #1e1e24;
+    font-size: 13px;
+}
+
+QLabel#id_pedido {
+    color: #1e1e24;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QLabel#cliente_pedido {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+QLabel#meta_info {
+    color: #718096;
+    font-size: 12px;
+}
+
+QLabel#total_pedido {
+    color: #1e1e24;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Badges de Estado */
+QLabel#badge_pendiente {
+    background-color: #fef3c7;
+    color: #d97706;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+QLabel#badge_confirmado {
+    background-color: #dcfce7;
+    color: #15803d;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+QLabel#badge_cancelado {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+/* Botones de acción dentro de la card */
+QPushButton {
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 4px;
+    padding: 6px 14px;
+    color: white;
+}
+
+QPushButton#btn_confirmar {
+    background-color: #15803d;
+}
+QPushButton#btn_confirmar:hover {
+    background-color: #166534;
+}
+
+QPushButton#btn_cancelar {
+    background-color: #e53935;  /* Rojo Admin */
+}
+QPushButton#btn_cancelar:hover {
+    background-color: #b71c1c;
+}
+
+QPushButton#btn_factura {
+    background-color: #1e1e24;  /* Negro corporativo */
+}
+QPushButton#btn_factura:hover {
+    background-color: #2d2d35;
+}
+"""
+
+
 class PedidoCard(QWidget):
 
     def __init__(self, pedido, service, refresh_callback):
@@ -21,130 +116,144 @@ class PedidoCard(QWidget):
         self.service = service
         self.refresh = refresh_callback
 
-        main_layout = QVBoxLayout()
-        main_layout.setSpacing(0)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        # 1. Aplicamos la hoja de estilos unificada
+        self.setStyleSheet(ESTILO_CARD_PEDIDO)
 
-        # Primera línea: ID, Cliente, Estado
+        # 2. Layout Raíz (Único layout asignado al componente base de la tarjeta)
+        root_layout = QVBoxLayout()
+        root_layout.setContentsMargins(0, 4, 0, 4) # Margen sutil entre tarjetas
+        self.setLayout(root_layout)
+
+        # 3. Marco físico contenedor de la tarjeta
+        self.card_frame = QWidget()
+        self.card_frame.setObjectName("contenedor_card")
+        
+        # El layout interno donde se meten todos los datos reales
+        card_layout = QVBoxLayout(self.card_frame)
+        card_layout.setContentsMargins(15, 15, 15, 15)
+        card_layout.setSpacing(10)
+
+        # --- PRIMERA LÍNEA: ID, CLIENTE, ESTADO ---
         header_layout = QHBoxLayout()
         
         id_label = QLabel(f"Pedido #{pedido['id']}")
-        id_font = QFont()
-        id_font.setBold(True)
-        id_label.setFont(id_font)
-        id_label.setMinimumWidth(80)
+        id_label.setObjectName("id_pedido")
         
-        cliente = pedido['cliente']
-        cliente_label = QLabel(f"{cliente['nombre']} {cliente.get('apellido','')}")
-        cliente_label.setMinimumWidth(200)
+        # CONTROL DE SEGURIDAD: Validar si 'cliente' viene como diccionario o como ID entero
+        cliente = pedido.get('cliente')
+        if isinstance(cliente, dict):
+            nombre_cliente = f"{cliente.get('nombre', '')} {cliente.get('apellido','')}".strip()
+        elif isinstance(cliente, int) or (isinstance(cliente, str) and cliente.isdigit()):
+            nombre_cliente = f"Cliente ID: {cliente} (Refrescar para ver)"
+        else:
+            nombre_cliente = "Cliente no especificado"
+
+        cliente_label = QLabel(nombre_cliente)
+        cliente_label.setObjectName("cliente_pedido")
         
-        estado = pedido['estado'].capitalize()
-        estado_label = QLabel(f"[{estado}]")
-        estado_font = QFont()
-        estado_font.setBold(True)
-        estado_label.setFont(estado_font)
-        estado_label.setMinimumWidth(100)
+        # CONTROL DE SEGURIDAD: Evitar KeyError si 'estado' no viene en la respuesta del POST
+        estado_raw = pedido.get('estado', 'pendiente')
+        estado = estado_raw.lower() if estado_raw else 'pendiente'
+        
+        estado_label = QLabel(f" {estado.capitalize()} ")
+        estado_label.setObjectName(f"badge_{estado}")
+        estado_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         header_layout.addWidget(id_label)
         header_layout.addWidget(cliente_label)
         header_layout.addWidget(estado_label)
         header_layout.addStretch()
+        card_layout.addLayout(header_layout)
         
-        main_layout.addLayout(header_layout)
-
-        # Segunda línea: Vendedor, Origen, Total, Fecha
+        # --- SEGUNDA LÍNEA: VENDEDOR, ORIGEN, FECHA, TOTAL ---
         details_layout = QHBoxLayout()
-        details_layout.setContentsMargins(20, 0, 0, 0)
         
+        # CONTROL DE SEGURIDAD: Vendedor defensivo
         vendedor = pedido.get('vendedor')
-        vendedor_text = f"{vendedor['nombre']} {vendedor.get('apellido','')}" if vendedor else "Sin vendedor"
+        if isinstance(vendedor, dict):
+            vendedor_text = f"{vendedor.get('nombre', '')} {vendedor.get('apellido','')}".strip()
+        elif vendedor is not None:
+            vendedor_text = f"Vendedor ID: {vendedor}"
+        else:
+            vendedor_text = "Sin vendedor"
+
         vendedor_label = QLabel(f"Vend: {vendedor_text}")
-        vendedor_label.setMinimumWidth(150)
-        vendedor_label.setStyleSheet("color: #666;")
+        vendedor_label.setObjectName("meta_info")
+
+        origen_label = QLabel(f"Origen: {pedido.get('origen', 'N/A')}")
+        origen_label.setObjectName("meta_info")
         
-        origen_label = QLabel(f"Origen: {pedido['origen']}")
-        origen_label.setMinimumWidth(100)
-        origen_label.setStyleSheet("color: #666;")
+        fecha_label = QLabel(f"{pedido.get('fecha_pedido', '')}")
+        fecha_label.setObjectName("meta_info")
         
-        total_label = QLabel(f"Total: ${pedido['total']}")
-        total_font = QFont()
-        total_font.setBold(True)
-        total_label.setFont(total_font)
-        total_label.setMinimumWidth(100)
-        
-        fecha_label = QLabel(f"{pedido['fecha_pedido']}")
-        fecha_label.setStyleSheet("color: #999;")
-        
+        total_label = QLabel(f"Total: ${pedido.get('total', '0.00')}")
+        total_label.setObjectName("total_pedido")
+
         details_layout.addWidget(vendedor_label)
         details_layout.addWidget(origen_label)
-        details_layout.addWidget(total_label)
         details_layout.addWidget(fecha_label)
         details_layout.addStretch()
-        
-        main_layout.addLayout(details_layout)
+        details_layout.addWidget(total_label)
+        card_layout.addLayout(details_layout)
 
-        # Productos (si existen)
+        # --- TERCERA LÍNEA: DETALLE DE PRODUCTOS ---
         if pedido.get('detalles'):
             productos_layout = QHBoxLayout()
-            productos_layout.setContentsMargins(20, 5, 0, 0)
-            
             productos_text = []
             for d in pedido['detalles']:
                 producto = d.get('producto')
-                productos_text.append(f"{producto['nombre']} x{d['cantidad']}")
+                if isinstance(producto, dict):
+                    productos_text.append(f"{producto.get('nombre', 'Producto')} x{d.get('cantidad', 1)}")
+                else:
+                    productos_text.append(f"Prod ID: {producto} x{d.get('cantidad', 1)}")
             
-            productos_label = QLabel(" | ".join(productos_text))
-            productos_label.setStyleSheet("color: #555; font-size: 9pt;")
+            productos_label = QLabel(" • ".join(productos_text))
+            productos_label.setObjectName("meta_info")
             productos_label.setWordWrap(True)
             productos_layout.addWidget(productos_label)
-            
-            main_layout.addLayout(productos_layout)
+            card_layout.addLayout(productos_layout)
 
-        # Acciones de pedido
+        # --- CUARTA LÍNEA: ACCIONES DISPONIBLES ---
         actions_layout = QHBoxLayout()
-        actions_layout.setContentsMargins(20, 5, 0, 0)
+        actions_layout.setSpacing(8)
 
-        if pedido['estado'] == 'pendiente':
+        if estado == 'pendiente':
             btn_confirmar = QPushButton("Confirmar")
-            btn_confirmar.setStyleSheet(
-                "background-color: #4CAF50; color: white; border: none; padding: 5px 12px;"
-            )
+            btn_confirmar.setObjectName("btn_confirmar")
+            btn_confirmar.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_confirmar.clicked.connect(self.confirmar_pedido)
 
             btn_cancelar = QPushButton("Cancelar")
-            btn_cancelar.setStyleSheet(
-                "background-color: #F44336; color: white; border: none; padding: 5px 12px;"
-            )
+            btn_cancelar.setObjectName("btn_cancelar")
+            btn_cancelar.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_cancelar.clicked.connect(self.cancelar_pedido)
 
             actions_layout.addWidget(btn_confirmar)
             actions_layout.addWidget(btn_cancelar)
+            actions_layout.addStretch()
+            card_layout.addLayout(actions_layout)
 
-        elif pedido['estado'] == 'confirmado':
+        elif estado == 'confirmado':
             if not pedido.get('facturada', False):
                 btn_factura = QPushButton("Generar factura")
-                btn_factura.setStyleSheet(
-                    "background-color: #FF9800; color: white; border: none; padding: 5px 12px;"
-                )
+                btn_factura.setObjectName("btn_factura")
+                btn_factura.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_factura.clicked.connect(self.generar_factura)
                 actions_layout.addWidget(btn_factura)
             else:
                 btn_ver_factura = QPushButton("Ver factura")
-                btn_ver_factura.setStyleSheet(
-                    "background-color: #607D8B; color: white; border: none; padding: 5px 12px;"
-                )
+                btn_ver_factura.setObjectName("btn_factura")
+                btn_ver_factura.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_ver_factura.clicked.connect(self.ver_factura)
                 actions_layout.addWidget(btn_ver_factura)
+            
+            actions_layout.addStretch()
+            card_layout.addLayout(actions_layout)
 
-        main_layout.addLayout(actions_layout)
-
-        # Separador
-        separator = QLabel("─" * 80)
-        separator.setStyleSheet("color: #ddd;")
-        main_layout.addWidget(separator)
-
-        self.setLayout(main_layout)
-
+        # 4. Inyección final: Metemos la tarjeta física dentro del layout raíz
+        root_layout.addWidget(self.card_frame)
+    
+    # --- MÉTODOS OPERATIVOS ---
     def confirmar_pedido(self):
         try:
             self.service.confirmar(self.pedido['id'])
@@ -210,3 +319,4 @@ class PedidoCard(QWidget):
             dialog.exec()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo cargar la factura: {e}")
+            
