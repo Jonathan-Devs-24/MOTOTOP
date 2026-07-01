@@ -75,8 +75,8 @@ QLabel#badge_cancelado {
     font-size: 11px;
 }
 
-/* Botones de acción dentro de la card */
-QPushButton {
+/* Botones de acción dentro de la card (Aislados del QMessageBox) */
+QWidget#contenedor_card QPushButton {
     font-weight: bold;
     font-size: 12px;
     border-radius: 4px;
@@ -84,28 +84,27 @@ QPushButton {
     color: white;
 }
 
-QPushButton#btn_confirmar {
+QWidget#contenedor_card QPushButton#btn_confirmar {
     background-color: #15803d;
 }
-QPushButton#btn_confirmar:hover {
+QWidget#contenedor_card QPushButton#btn_confirmar:hover {
     background-color: #166534;
 }
 
-QPushButton#btn_cancelar {
+QWidget#contenedor_card QPushButton#btn_cancelar {
     background-color: #e53935;  /* Rojo Admin */
 }
-QPushButton#btn_cancelar:hover {
+QWidget#contenedor_card QPushButton#btn_cancelar:hover {
     background-color: #b71c1c;
 }
 
-QPushButton#btn_factura {
+QWidget#contenedor_card QPushButton#btn_factura {
     background-color: #1e1e24;  /* Negro corporativo */
 }
-QPushButton#btn_factura:hover {
+QWidget#contenedor_card QPushButton#btn_factura:hover {
     background-color: #2d2d35;
 }
 """
-
 
 class PedidoCard(QWidget):
 
