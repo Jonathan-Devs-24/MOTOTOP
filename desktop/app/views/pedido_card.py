@@ -253,18 +253,33 @@ class PedidoCard(QWidget):
         root_layout.addWidget(self.card_frame)
     
     # --- MÉTODOS OPERATIVOS ---
+    # --- REEMPLAZAR MÉTODO COMPLETADO EN pedido_card.py ---
     def confirmar_pedido(self):
+        # 1. Preguntar primero (Bloquea la ejecución hasta que el usuario elija)
+        generar = QMessageBox.question(
+            self,
+            "Confirmar pedido",
+            "¿Está seguro de que desea confirmar este pedido?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        # 2. Si la respuesta NO es "Yes", frenamos la ejecución inmediatamente
+        if generar != QMessageBox.StandardButton.Yes:
+            return
+
+        # 3. Solo si aceptó, procedemos con la petición al servidor Django
         try:
             self.service.confirmar(self.pedido['id'])
 
-            generar = QMessageBox.question(
+            # Ofrecer la factura tras el éxito de la confirmación
+            facturar = QMessageBox.question(
                 self,
                 "Generar factura",
-                "Pedido confirmado. ¿Desea generar la factura ahora?",
+                "Pedido confirmado de forma segura. ¿Desea generar la factura ahora?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
-            if generar == QMessageBox.StandardButton.Yes:
+            if facturar == QMessageBox.StandardButton.Yes:
                 self.generar_factura()
             else:
                 QMessageBox.information(
@@ -276,7 +291,8 @@ class PedidoCard(QWidget):
             self.refresh()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo confirmar el pedido: {e}")
-
+            
+            
     def cancelar_pedido(self):
         confirm = QMessageBox.question(
             self,
