@@ -1,5 +1,4 @@
-# desktop/app/views/envio_view.py
-
+# C:\Users\jonat\MotoTop\desktop\app\views\envio_view.py
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -8,10 +7,61 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QMessageBox,
+    QHeaderView
 )
 
 from services.pedido_service import PedidoService
 
+QSS_STYLE = """
+    QWidget#EnvioView {
+        background-color: #ffffff;
+    }
+    QPushButton {
+        background-color: #f8f9fa;
+        color: #212529;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 14px;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    QPushButton:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+    }
+    QPushButton#btn_crear {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+    QPushButton#btn_crear:hover {
+        background-color: #bd2130;
+    }
+    QTableWidget {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        gridline-color: #f1f3f5;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        color: #212529;
+    }
+    QHeaderView::section {
+        background-color: #f8f9fa;
+        color: #495057;
+        padding: 8px;
+        font-weight: bold;
+        border: none;
+        border-bottom: 2px solid #dee2e6;
+    }
+    QTableWidget::item {
+        padding: 6px;
+    }
+    QTableWidget::item:selected {
+        background-color: #f8d7da;
+        color: #b02a37;
+    }
+"""
 
 class EnvioView(QWidget):
 
@@ -29,21 +79,28 @@ class EnvioView(QWidget):
         self.cargar_datos()
 
     def init_ui(self):
+        self.setObjectName("EnvioView")
+        self.setStyleSheet(QSS_STYLE)
+        
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
 
         # Botones
         botones_layout = QHBoxLayout()
+        botones_layout.setSpacing(8)
 
-        self.btn_actualizar = QPushButton("Actualizar")
-        self.btn_crear = QPushButton("Crear envío")
-        self.btn_editar = QPushButton("Editar envío")
+        self.btn_actualizar = QPushButton("🔄 Actualizar")
+        self.btn_crear = QPushButton("＋ Crear envío")
+        self.btn_crear.setObjectName("btn_crear")
+        self.btn_editar = QPushButton("✏️ Editar envío")
 
         botones_layout.addWidget(self.btn_actualizar)
         botones_layout.addWidget(self.btn_crear)
         botones_layout.addWidget(self.btn_editar)
         botones_layout.addStretch()
 
-        # Tabla
+        # Tabla Estilizada
         self.table = QTableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
@@ -54,6 +111,14 @@ class EnvioView(QWidget):
             "Tracking",
             "Estado",
         ])
+        
+        # Comportamiento visual moderno de la tabla
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(True)
+        
+        # CORRECCIÓN AQUÍ: Uso correcto de ResizeMode en PyQt6
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.table.horizontalHeader().setStretchLastSection(True)
 
         # Layout
         layout.addLayout(botones_layout)
@@ -112,7 +177,6 @@ class EnvioView(QWidget):
         try:
             # Obtener pedidos
             pedidos = self.pedido_service.listar()
-            
 
             if isinstance(pedidos, dict) and "results" in pedidos:
                 pedidos = pedidos["results"]
@@ -165,7 +229,6 @@ class EnvioView(QWidget):
                 str(e)
             )
 
-
     def abrir_formulario_envio(self, pedido):
         from views.envio_form import EnvioForm
 
@@ -175,8 +238,7 @@ class EnvioView(QWidget):
             on_success=self.cargar_datos
         )
         self.envio_form.show()
-            
-            
+
     def editar_envio(self):
         row = self.table.currentRow()
 

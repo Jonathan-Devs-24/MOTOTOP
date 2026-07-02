@@ -27,11 +27,6 @@ class PagoService:
         
         
     def listar_por_factura(self, factura_id):
-
-        response = self.http.get(
-            f"pagos/?factura={factura_id}"
-        )
-
+        response = self.http.get(f"pagos/?factura={factura_id}")
         response.raise_for_status()
-
         return response.json()

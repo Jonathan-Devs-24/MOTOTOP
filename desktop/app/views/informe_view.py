@@ -1,3 +1,4 @@
+# C:\Users\jonat\MotoTop\desktop\app\views\informe_view.py
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -13,6 +14,80 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QDate, Qt
 
+QSS_STYLE = """
+    QWidget#InformeView {
+        background-color: #ffffff;
+    }
+    QLabel {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        color: #495057;
+    }
+    QLabel#lbl_seccion {
+        font-size: 15px;
+        font-weight: bold;
+        color: #1a1a1a;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    QDateEdit {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 6px;
+        color: #212529;
+        min-height: 20px;
+        font-weight: bold;
+    }
+    QDateEdit:focus {
+        border: 1px solid #dc3545;
+        background-color: #ffffff;
+    }
+    QPushButton#btn_refresh {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    QPushButton#btn_refresh:hover {
+        background-color: #bd2130;
+    }
+    QPushButton#btn_refresh:pressed {
+        background-color: #b02a37;
+    }
+    QGroupBox#metric_card {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+    }
+    QTableWidget {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        gridline-color: #f1f3f5;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        color: #212529;
+    }
+    QHeaderView::section {
+        background-color: #f8f9fa;
+        color: #495057;
+        padding: 8px;
+        font-weight: bold;
+        border: none;
+        border-bottom: 2px solid #dee2e6;
+    }
+    QTableWidget::item {
+        padding: 6px;
+    }
+    QTableWidget::item:selected {
+        background-color: #f8d7da;
+        color: #b02a37;
+    }
+"""
 
 class InformeView(QWidget):
 
@@ -21,11 +96,16 @@ class InformeView(QWidget):
 
         self.service = informe_service
 
-        self.setWindowTitle("Informes")
+        self.setWindowTitle("Informes — MOTO-TOP")
+        
+        self.setObjectName("InformeView")
+        self.setStyleSheet(QSS_STYLE)
 
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(16)
 
+        # Barra de Controles superiores
         controls_layout = QHBoxLayout()
         controls_layout.setSpacing(12)
 
@@ -40,25 +120,29 @@ class InformeView(QWidget):
         self.fecha_fin.setDisplayFormat("yyyy-MM-dd")
 
         self.btn_refresh = QPushButton("Actualizar")
-        self.btn_refresh.setStyleSheet(
-            "background-color: #1976D2; color: white; border: none; padding: 8px 16px; border-radius: 4px;"
-        )
+        self.btn_refresh.setObjectName("btn_refresh")
         self.btn_refresh.clicked.connect(self.load_data)
 
-        controls_layout.addWidget(QLabel("Desde:"))
+        lbl_desde = QLabel("Desde:")
+        lbl_desde.setStyleSheet("font-weight: bold;")
+        lbl_hasta = QLabel("Hasta:")
+        lbl_hasta.setStyleSheet("font-weight: bold;")
+
+        controls_layout.addWidget(lbl_desde)
         controls_layout.addWidget(self.fecha_inicio)
-        controls_layout.addWidget(QLabel("Hasta:"))
+        controls_layout.addWidget(lbl_hasta)
         controls_layout.addWidget(self.fecha_fin)
         controls_layout.addWidget(self.btn_refresh)
         controls_layout.addStretch()
 
         main_layout.addLayout(controls_layout)
 
+        # Fila de Tarjetas de Reporte
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(14)
 
         self.card_total_ventas = self.build_card("Total ventas", "$0")
-        self.card_pedidos_pendientes = self.build_card("Pedidos pendientes de envío", "0")
+        self.card_pedidos_pendientes = self.build_card("Pedidos pendientes", "0")
         self.card_facturas_pendientes = self.build_card("Facturas pendientes", "0")
         self.card_clientes_saldo = self.build_card("Clientes con saldo", "0")
 
@@ -69,12 +153,14 @@ class InformeView(QWidget):
 
         main_layout.addLayout(cards_layout)
 
+        # Tablas de Datos
         self.table_ventas_vendedor = QTableWidget(0, 2)
         self.table_ventas_vendedor.setHorizontalHeaderLabels(["Vendedor", "Total ventas"])
         self.table_ventas_vendedor.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_ventas_vendedor.verticalHeader().setVisible(False)
         self.table_ventas_vendedor.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table_ventas_vendedor.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table_ventas_vendedor.setAlternatingRowColors(True)
 
         self.table_clientes_saldo = QTableWidget(0, 4)
         self.table_clientes_saldo.setHorizontalHeaderLabels(["Cliente", "Facturado", "Pagado", "Saldo"])
@@ -82,27 +168,35 @@ class InformeView(QWidget):
         self.table_clientes_saldo.verticalHeader().setVisible(False)
         self.table_clientes_saldo.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table_clientes_saldo.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table_clientes_saldo.setAlternatingRowColors(True)
 
-        main_layout.addWidget(QLabel("Ventas por vendedor"))
+        lbl_sec_vendedores = QLabel("Ventas por vendedor")
+        lbl_sec_vendedores.setObjectName("lbl_seccion")
+        
+        lbl_sec_clientes = QLabel("Top clientes con saldo")
+        lbl_sec_clientes.setObjectName("lbl_seccion")
+
+        main_layout.addWidget(lbl_sec_vendedores)
         main_layout.addWidget(self.table_ventas_vendedor)
-        main_layout.addWidget(QLabel("Top clientes con saldo"))
+        main_layout.addWidget(lbl_sec_clientes)
         main_layout.addWidget(self.table_clientes_saldo)
 
         self.setLayout(main_layout)
-
         self.load_data()
 
     def build_card(self, title, value):
         card = QGroupBox()
+        card.setObjectName("metric_card")
+        
         layout = QVBoxLayout()
         layout.setContentsMargins(14, 14, 14, 14)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         title_label = QLabel(title)
-        title_label.setStyleSheet("color: #555; font-weight: bold;")
+        title_label.setStyleSheet("color: #6c757d; font-weight: bold; font-size: 12px;")
 
         value_label = QLabel(value)
-        value_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333;")
+        value_label.setStyleSheet("font-size: 22px; font-weight: bold; color: #1a1a1a;")
         value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(title_label)
@@ -110,10 +204,6 @@ class InformeView(QWidget):
         layout.addStretch()
 
         card.setLayout(layout)
-        card.setStyleSheet(
-            "QGroupBox { background-color: white; border: 1px solid #ddd; border-radius: 10px; }"
-        )
-
         card.value_label = value_label
         return card
 

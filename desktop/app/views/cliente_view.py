@@ -1,3 +1,4 @@
+# C:\Users\jonat\MotoTop\desktop\app\views\cliente_view.py
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,

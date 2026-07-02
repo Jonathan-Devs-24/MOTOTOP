@@ -1,5 +1,4 @@
 # desktop/app/views/pago_view.py
-
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -154,10 +153,11 @@ class PagoView(QWidget):
 
         self.factura = factura
         self.service = pago_service
+        self.factura_id = self._obtener_id_factura(self.factura)
 
         # Definición del alcance de la ventana
-        if self.factura:
-            self.setWindowTitle(f"Pagos - Factura #{self.factura['id']}")
+        if self.factura_id is not None:
+            self.setWindowTitle(f"Pagos - Factura #{self.factura_id}")
             self.resize(750, 480)
         else:
             self.setWindowTitle("Cobranzas - Panel General")
@@ -225,36 +225,54 @@ class PagoView(QWidget):
         self.setLayout(self.main_layout)
         self.cargar_pagos()
 
+    def _obtener_id_factura(self, factura):
+        if isinstance(factura, dict):
+            return factura.get("id")
+        return getattr(factura, "id", None)
+
+    def _obtener_total_factura(self):
+        if isinstance(self.factura, dict):
+            return self.factura.get("total")
+        return getattr(self.factura, "total", None)
+
     def cargar_pagos(self):
         try:
-            if self.factura:
-                # 1. Solicitar los datos al servicio
-                response = self.service.listar_por_factura(self.factura["id"])
+            if self.factura_id is not None:
+                # 1. Asegurar el ID de la factura actual como un entero limpio
+                id_factura_actual = int(self.factura_id)
+
+                # 2. Solicitar los datos al servicio (el backend ya filtra por ?factura=ID)
+                response = self.service.listar_por_factura(id_factura_actual)
                 
-                # FILTRO DE SEGURIDAD LOCAL: Asegura aislar solo los pagos que corresponden a ESTA factura
-                pagos = [p for p in response["results"] if int(p["factura"]) == int(self.factura["id"])]
+                # Desempaquetar si la API devuelve un diccionario paginado con 'results' o una lista directa
+                pagos_filtrados = response.get("results", response) if isinstance(response, dict) else response
                 
-                total_f = float(self.factura["total"])
-                total_p = sum(float(p["monto"]) for p in pagos if p["estado"].lower() == "completado")
+                # 3. Cálculos basados ÚNICAMENTE en la lista devuelta por la API para esta factura
+                total_f = float(self._obtener_total_factura() or 0)
+                total_p = sum(float(p["monto"]) for p in pagos_filtrados if str(p["estado"]).lower() == "completado")
                 pendiente = total_f - total_p
 
                 self.info.setText(
-                    f"Factura #{self.factura['id']}  |  Total: ${total_f:.2f}  |  "
+                    f"Factura #{id_factura_actual}  |  Total: ${total_f:.2f}  |  "
                     f"Pagado: ${total_p:.2f}  |  Pendiente: ${pendiente:.2f}"
                 )
 
-                # 2. Limpiar filas residuales e inicializar la grilla con el tamaño correcto
+                # 4. LIMPIEZA ABSOLUTA DE LA TABLA ANTES DE REPOBLAR
+                self.table.clearContents()
                 self.table.setRowCount(0)
-                self.table.setRowCount(len(pagos))
                 
-                for row, p in enumerate(pagos):
+                # Establecemos el tamaño exacto de filas según los pagos validados por el backend
+                self.table.setRowCount(len(pagos_filtrados))
+                
+                # 5. Llenar la tabla con los datos directamente
+                for row, p in enumerate(pagos_filtrados):
                     self.table.setItem(row, 0, QTableWidgetItem(str(p["id"])))
-                    self.table.setItem(row, 1, QTableWidgetItem(f"$ {p['monto']}"))
-                    self.table.setItem(row, 2, QTableWidgetItem(p["metodo_pago"].upper()))
-                    self.table.setItem(row, 3, QTableWidgetItem(p["estado"].upper()))
+                    self.table.setItem(row, 1, QTableWidgetItem(f"$ {float(p['monto']):.2f}"))
+                    self.table.setItem(row, 2, QTableWidgetItem(str(p["metodo_pago"]).upper()))
+                    self.table.setItem(row, 3, QTableWidgetItem(str(p["estado"]).upper()))
                     self.table.setItem(row, 4, QTableWidgetItem(str(p["referencia"]) if p["referencia"] else "-"))
             else:
-                # === EL BLOQUE ELSE SE CONSERVA EXACTAMENTE IGUAL ===
+                # === VISTA GENERAL DE COBRANZAS ===
                 self.info.setText("Listado General de Cobranzas — Control de Comprobantes")
                 
                 while self.scroll_layout.count():
@@ -263,11 +281,13 @@ class PagoView(QWidget):
                         item.widget().deleteLater()
 
                 response = self.service.listar()
-                todos_los_pagos = response["results"]
+                todos_los_pagos = response["results"] if isinstance(response, dict) else response
 
                 pagos_por_factura = {}
                 for p in todos_los_pagos:
-                    f_id = p["factura"]
+                    factura_campo = p.get("factura")
+                    f_id = factura_campo.get("id") if isinstance(factura_campo, dict) else factura_campo
+                    
                     if f_id not in pagos_por_factura:
                         pagos_por_factura[f_id] = []
                     pagos_por_factura[f_id].append(p)
@@ -284,7 +304,7 @@ class PagoView(QWidget):
                     lbl_titulo.setObjectName("cardTitle")
                     header_layout.addWidget(lbl_titulo)
 
-                    total_pagado = sum(float(p["monto"]) for p in lista_pagos if p["estado"].lower() == "completado")
+                    total_pagado = sum(float(p["monto"]) for p in lista_pagos if str(p["estado"]).lower() == "completado")
                     
                     lbl_resumen = QLabel(f"Total Cobrado: ${total_pagado:.2f}  |  Transacciones: {len(lista_pagos)}")
                     lbl_resumen.setObjectName("cardSummaryText")
@@ -316,9 +336,9 @@ class PagoView(QWidget):
                     sub_table.setRowCount(len(lista_pagos))
                     for row, p in enumerate(lista_pagos):
                         sub_table.setItem(row, 0, QTableWidgetItem(str(p["id"])))
-                        sub_table.setItem(row, 1, QTableWidgetItem(f"$ {p['monto']}"))
-                        sub_table.setItem(row, 2, QTableWidgetItem(p["metodo_pago"].upper()))
-                        sub_table.setItem(row, 3, QTableWidgetItem(p["estado"].upper()))
+                        sub_table.setItem(row, 1, QTableWidgetItem(f"$ {float(p['monto']):.2f}"))
+                        sub_table.setItem(row, 2, QTableWidgetItem(str(p["metodo_pago"]).upper()))
+                        sub_table.setItem(row, 3, QTableWidgetItem(str(p["estado"]).upper()))
                         sub_table.setItem(row, 4, QTableWidgetItem(str(p["referencia"]) if p["referencia"] else "-"))
                     
                     card_layout.addWidget(sub_table)
@@ -327,7 +347,7 @@ class PagoView(QWidget):
                 self.scroll_layout.addStretch()
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
+            QMessageBox.critical(self, "Error", f"Error crítico al cargar pagos: {str(e)}")
 
     # === CONTROLES DE EDICIÓN PARA LA ENTRADA GENERAL ===
     def obtener_id_desde_subtabla(self, factura_id):
@@ -372,8 +392,9 @@ class PagoView(QWidget):
         return int(self.table.item(fila, 0).text()) if fila >= 0 else None
 
     def crear_pago(self):
-        if not self.factura: return
-        dialog = PagoForm(self, factura_id=self.factura["id"])
+        if self.factura_id is None:
+            return
+        dialog = PagoForm(self, factura_id=self.factura_id)
         if dialog.exec():
             try:
                 self.service.crear(dialog.obtener_datos())
@@ -386,7 +407,7 @@ class PagoView(QWidget):
         if not pago_id: return
         try:
             pago = self.service.obtener(pago_id)
-            dialog = PagoForm(self, factura_id=self.factura["id"], pago=pago)
+            dialog = PagoForm(self, factura_id=self.factura_id, pago=pago)
             if dialog.exec():
                 self.service.actualizar(pago_id, dialog.obtener_datos())
                 self.cargar_pagos()

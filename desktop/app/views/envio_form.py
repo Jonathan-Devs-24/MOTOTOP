@@ -8,10 +8,67 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QComboBox,
     QDateTimeEdit,
+    QFormLayout
 )
 
 from PyQt6.QtCore import QDateTime
 
+QSS_STYLE = """
+    QWidget#EnvioForm {
+        background-color: #ffffff;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 13px;
+        color: #1a1a1a;
+    }
+    QLabel {
+        font-weight: bold;
+        color: #495057;
+    }
+    QLabel#lbl_pedido_header {
+        font-size: 15px;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #212529;
+        padding: 10px;
+        border-left: 4px solid #dc3545;
+        border-radius: 4px;
+        margin-bottom: 5px;
+    }
+    QLineEdit, QComboBox, QDateTimeEdit {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 6px;
+        color: #212529;
+        min-height: 22px;
+    }
+    QLineEdit:focus, QComboBox:focus, QDateTimeEdit:focus {
+        border: 1px solid #dc3545;
+        background-color: #ffffff;
+    }
+    QComboBox QAbstractItemView {
+        background-color: #ffffff;
+        color: #212529;
+        selection-background-color: #dc3545;
+        selection-color: white;
+    }
+    QPushButton#btn_save {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+    QPushButton#btn_save:hover {
+        background-color: #bd2130;
+    }
+    QPushButton#btn_save:pressed {
+        background-color: #b02a37;
+    }
+"""
 
 class EnvioForm(QWidget):
 
@@ -26,87 +83,80 @@ class EnvioForm(QWidget):
         self.setWindowTitle(
             "Editar Envío" if envio else f"Nuevo Envío - Pedido #{pedido['id']}"
         )
-        self.resize(500, 500)
+        self.resize(500, 520)
 
-        layout = QVBoxLayout()
+        self.setObjectName("EnvioForm")
+        self.setStyleSheet(QSS_STYLE)
 
-        # ==========================================
-        # PEDIDO
-        # ==========================================
-        layout.addWidget(QLabel(f"Pedido #{pedido['id']}"))
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
-        # ==========================================
-        # EMPRESA DE TRANSPORTE
-        # ==========================================
-        layout.addWidget(QLabel("Empresa de transporte"))
+        # Header del Pedido Destacado
+        self.lbl_pedido = QLabel(f"📦 Seguimiento de Pedido #{pedido['id']}")
+        self.lbl_pedido.setObjectName("lbl_pedido_header")
+        main_layout.addWidget(self.lbl_pedido)
+
+        # Formulario Estructurado
+        form_layout = QFormLayout()
+        form_layout.setSpacing(14)
+
+        # Empresa Transporte
         self.empresa_transporte = QComboBox()
         self.empresa_transporte.setEditable(True)
-        layout.addWidget(self.empresa_transporte)
+        form_layout.addRow("Empresa de Transporte:", self.empresa_transporte)
 
         self.cargar_empresas_transporte()
 
-        # ==========================================
-        # TRACKING
-        # ==========================================
-        layout.addWidget(QLabel("Código de seguimiento"))
+        # Tracking
         self.tracking_code = QLineEdit()
-        layout.addWidget(self.tracking_code)
+        self.tracking_code.setPlaceholderText("Ej: TRK123456789")
+        form_layout.addRow("Código de Seguimiento:", self.tracking_code)
 
-        # ==========================================
-        # ESTADO
-        # ==========================================
-        layout.addWidget(QLabel("Estado del envío"))
-
+        # Estado del Envío
         self.estado_envio = QComboBox()
         self.estado_envio.addItem("Recibido", "recibido")
         self.estado_envio.addItem("En preparación", "preparacion")
         self.estado_envio.addItem("Enviado", "enviado")
         self.estado_envio.addItem("Entregado", "entregado")
         self.estado_envio.addItem("Cancelado", "cancelado")
-        layout.addWidget(self.estado_envio)
+        form_layout.addRow("Estado del Envío:", self.estado_envio)
 
-        # ==========================================
-        # FECHA ENVÍO
-        # ==========================================
-        layout.addWidget(QLabel("Fecha de envío"))
+        # Configuración común para selectores de fecha
+        formato_fecha = "yyyy-MM-dd HH:mm:ss"
+        ahora = QDateTime.currentDateTime()
 
+        # Fecha Envío
         self.fecha_envio = QDateTimeEdit()
         self.fecha_envio.setCalendarPopup(True)
-        self.fecha_envio.setDateTime(QDateTime.currentDateTime())
-        self.fecha_envio.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        layout.addWidget(self.fecha_envio)
+        self.fecha_envio.setDateTime(ahora)
+        self.fecha_envio.setDisplayFormat(formato_fecha)
+        form_layout.addRow("Fecha de Envío:", self.fecha_envio)
 
-        # ==========================================
-        # FECHA ESTIMADA
-        # ==========================================
-        layout.addWidget(QLabel("Fecha estimada"))
-
+        # Fecha Estimada
         self.fecha_estimada = QDateTimeEdit()
         self.fecha_estimada.setCalendarPopup(True)
-        self.fecha_estimada.setDateTime(QDateTime.currentDateTime())
-        self.fecha_estimada.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        layout.addWidget(self.fecha_estimada)
+        self.fecha_estimada.setDateTime(ahora)
+        self.fecha_estimada.setDisplayFormat(formato_fecha)
+        form_layout.addRow("Fecha Estimada:", self.fecha_estimada)
 
-        # ==========================================
-        # FECHA ENTREGA
-        # ==========================================
-        layout.addWidget(QLabel("Fecha de entrega"))
-
+        # Fecha Entrega
         self.fecha_entrega = QDateTimeEdit()
         self.fecha_entrega.setCalendarPopup(True)
-        self.fecha_entrega.setDateTime(QDateTime.currentDateTime())
-        self.fecha_entrega.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        layout.addWidget(self.fecha_entrega)
+        self.fecha_entrega.setDateTime(ahora)
+        self.fecha_entrega.setDisplayFormat(formato_fecha)
+        form_layout.addRow("Fecha de Entrega:", self.fecha_entrega)
 
-        # ==========================================
-        # BOTÓN GUARDAR
-        # ==========================================
+        main_layout.addLayout(form_layout)
+        main_layout.addStretch()
+
+        # Botón Guardar
         self.btn_save = QPushButton("Guardar")
+        self.btn_save.setObjectName("btn_save")
         self.btn_save.clicked.connect(self.save)
-        layout.addWidget(self.btn_save)
+        main_layout.addWidget(self.btn_save)
 
-        layout.addStretch()
-        self.setLayout(layout)
+        self.setLayout(main_layout)
 
         if self.envio:
             self.load_envio()
@@ -198,9 +248,7 @@ class EnvioForm(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
-            
-            
-            
+
     def cargar_empresas_transporte(self):
         try:
             envios = self.envio_service.listar()
@@ -218,3 +266,5 @@ class EnvioForm(QWidget):
 
         except Exception:
             pass
+        
+        
