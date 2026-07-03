@@ -79,6 +79,12 @@ class LoginView(QWidget):
         self.button = QPushButton("Login")
         self.button.clicked.connect(self.handle_login)
 
+        # --- CAPTURA DE ENTER / INTRO AQUÍ ---
+        # Al presionar Enter en cualquiera de los inputs, ejecuta la lógica de login
+        self.username.returnPressed.connect(self.handle_login)
+        self.password.returnPressed.connect(self.handle_login)
+        # -------------------------------------
+
         # 6. Etiqueta de estado
         self.status = QLabel("")
         self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -167,12 +173,12 @@ class LoginView(QWidget):
                 color: #1a1a1a;
                 font-size: 24px;
                 font-weight: bold;
-            }
+                }
             QLineEdit {
                 background-color: #ffffff;
                 color: #212121;
                 border: 1px solid #888888;
-                border-radius: 6p;
+                border-radius: 6px;
                 padding: 10px 15px;
                 font-size: 14px;
             }

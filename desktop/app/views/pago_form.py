@@ -1,5 +1,4 @@
 # desktop/app/views/pago_form.py
-
 from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,

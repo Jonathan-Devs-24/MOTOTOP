@@ -25,8 +25,10 @@ class PagoService:
     def eliminar(self, pago_id):
         self.http.delete(f"pagos/{pago_id}/")
         
-        
     def listar_por_factura(self, factura_id):
+        """
+        Recupera el conjunto de transacciones asociadas a un identificador 
+        de factura específico mediante el parámetro de consulta '?factura='.
+        """
         response = self.http.get(f"pagos/?factura={factura_id}")
-        response.raise_for_status()
         return response.json()

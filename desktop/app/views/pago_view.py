@@ -149,13 +149,18 @@ QSS_STYLE_CLARO = """
 class PagoView(QWidget):
 
     def __init__(self, factura=None, pago_service=None):
+        """
+        Constructor de la vista de pagos.
+        Puede recibir una factura específica (diccionario/objeto) o None (Vista General).
+        """
         super().__init__()
 
         self.factura = factura
         self.service = pago_service
+        # Extrae el ID limpio de la factura si fue provista
         self.factura_id = self._obtener_id_factura(self.factura)
 
-        # Definición del alcance de la ventana
+        # Configura el título y tamaño de la ventana según el modo de apertura
         if self.factura_id is not None:
             self.setWindowTitle(f"Pagos - Factura #{self.factura_id}")
             self.resize(750, 480)
@@ -165,24 +170,26 @@ class PagoView(QWidget):
             
         self.setStyleSheet(QSS_STYLE_CLARO)
 
-        # Layout Principal de la Sección
+        # Inicializa el layout vertical principal
         self.main_layout = QVBoxLayout()
         self.main_layout.setSpacing(15)
         self.main_layout.setContentsMargins(20, 20, 20, 20)
         
-        # Indicador Superior
+        # Etiqueta informativa superior para saldos y títulos
         self.info = QLabel("")
         self.info.setObjectName("infoLabel")
         self.main_layout.addWidget(self.info)
 
         if self.factura:
             # === VISTA INDIVIDUAL DESDE UNA FACTURA ESPECÍFICA ===
+            # Layout horizontal para las acciones de la vista individual
             buttons_layout = QHBoxLayout()
             self.btn_crear = QPushButton("Crear")
             self.btn_editar = QPushButton("Editar")
             self.btn_eliminar = QPushButton("Eliminar")
             self.btn_recargar = QPushButton("Recargar")
 
+            # Conexión de señales de clicks a sus respectivos métodos
             self.btn_crear.clicked.connect(self.crear_pago)
             self.btn_editar.clicked.connect(self.editar_pago)
             self.btn_eliminar.clicked.connect(self.eliminar_pago)
@@ -191,10 +198,11 @@ class PagoView(QWidget):
             buttons_layout.addWidget(self.btn_crear)
             buttons_layout.addWidget(self.btn_editar)
             buttons_layout.addWidget(self.btn_eliminar)
-            buttons_layout.addStretch()  
+            buttons_layout.addStretch()  # Empuja el botón recargar hacia la derecha
             buttons_layout.addWidget(self.btn_recargar)
             self.main_layout.addLayout(buttons_layout)
 
+            # Configuración de la tabla única de pagos para la factura seleccionada
             self.table = QTableWidget()
             self.table.setColumnCount(5)
             self.table.setHorizontalHeaderLabels(["ID", "Monto", "Método", "Estado", "Referencia"])
@@ -205,6 +213,7 @@ class PagoView(QWidget):
             self.main_layout.addWidget(self.table)
         else:
             # === VISTA GENERAL DE COBRANZAS (DISEÑO POR TARJETAS CLARAS) ===
+            # Layout superior para botón de actualización del panel completo
             top_actions = QHBoxLayout()
             self.btn_recargar_global = QPushButton("Recargar Panel")
             self.btn_recargar_global.setObjectName("btn_recargar_global")
@@ -213,6 +222,7 @@ class PagoView(QWidget):
             top_actions.addWidget(self.btn_recargar_global)
             self.main_layout.addLayout(top_actions)
 
+            # Área de scroll para contener múltiples tarjetas dinámicamente sin desbordar la ventana
             self.scroll_area = QScrollArea()
             self.scroll_area.setWidgetResizable(True)
             self.scroll_widget = QWidget()
@@ -223,25 +233,32 @@ class PagoView(QWidget):
             self.main_layout.addWidget(self.scroll_area)
 
         self.setLayout(self.main_layout)
+        # Dispara la primera carga de datos al inicializar la vista
         self.cargar_pagos()
 
     def _obtener_id_factura(self, factura):
+        """Helper para extraer el ID de factura de forma segura si viene como dict o modelo."""
         if isinstance(factura, dict):
             return factura.get("id")
         return getattr(factura, "id", None)
 
     def _obtener_total_factura(self):
+        """Helper para extraer el importe total de la factura actual."""
         if isinstance(self.factura, dict):
             return self.factura.get("total")
         return getattr(self.factura, "total", None)
 
     def cargar_pagos(self):
+        """
+        === AQUÍ COMIENZA LO QUE ESTAMOS TRATANDO DE SOLUCIONAR ===
+        Método central que recupera los datos desde la API y repobla la interfaz gráfica.
+        """
         try:
             if self.factura_id is not None:
                 # 1. Asegurar el ID de la factura actual como un entero limpio
                 id_factura_actual = int(self.factura_id)
 
-                # 2. Solicitar los datos al servicio (el backend ya filtra por ?factura=ID)
+                # 2. SOLICITAR LOS DATOS AL SERVICIO (AQUÍ INTERVENIMOS PARA PASAR EL QUERY PARAMETER '?factura=')
                 response = self.service.listar_por_factura(id_factura_actual)
                 
                 # Desempaquetar si la API devuelve un diccionario paginado con 'results' o una lista directa
@@ -252,6 +269,7 @@ class PagoView(QWidget):
                 total_p = sum(float(p["monto"]) for p in pagos_filtrados if str(p["estado"]).lower() == "completado")
                 pendiente = total_f - total_p
 
+                # Actualiza la etiqueta informativa con los importes financieros procesados
                 self.info.setText(
                     f"Factura #{id_factura_actual}  |  Total: ${total_f:.2f}  |  "
                     f"Pagado: ${total_p:.2f}  |  Pendiente: ${pendiente:.2f}"
@@ -273,16 +291,20 @@ class PagoView(QWidget):
                     self.table.setItem(row, 4, QTableWidgetItem(str(p["referencia"]) if p["referencia"] else "-"))
             else:
                 # === VISTA GENERAL DE COBRANZAS ===
+                # Configura el encabezado del panel general
                 self.info.setText("Listado General de Cobranzas — Control de Comprobantes")
                 
+                # Limpia todos los widgets previos dentro del scroll layout para evitar duplicados visuales
                 while self.scroll_layout.count():
                     item = self.scroll_layout.takeAt(0)
                     if item.widget():
                         item.widget().deleteLater()
 
+                # Petición general al servicio sin filtros locales
                 response = self.service.listar()
                 todos_los_pagos = response["results"] if isinstance(response, dict) else response
 
+                # Agrupa la respuesta plana en un mapa indexado por ID de factura
                 pagos_por_factura = {}
                 for p in todos_los_pagos:
                     factura_campo = p.get("factura")
@@ -292,6 +314,7 @@ class PagoView(QWidget):
                         pagos_por_factura[f_id] = []
                     pagos_por_factura[f_id].append(p)
 
+                # Itera el mapa de agrupaciones para construir una tarjeta por cada factura
                 for f_id, lista_pagos in pagos_por_factura.items():
                     card = QFrame()
                     card.setObjectName("cardFactura")
@@ -304,6 +327,7 @@ class PagoView(QWidget):
                     lbl_titulo.setObjectName("cardTitle")
                     header_layout.addWidget(lbl_titulo)
 
+                    # Sumariza los montos cobrados cuyo estado sea estrictamente completado
                     total_pagado = sum(float(p["monto"]) for p in lista_pagos if str(p["estado"]).lower() == "completado")
                     
                     lbl_resumen = QLabel(f"Total Cobrado: ${total_pagado:.2f}  |  Transacciones: {len(lista_pagos)}")
@@ -311,10 +335,12 @@ class PagoView(QWidget):
                     header_layout.addWidget(lbl_resumen)
                     header_layout.addStretch()
 
+                    # Bloque de botones operativos para cada tarjeta individualizada
                     card_buttons = QHBoxLayout()
                     btn_edit = QPushButton("Editar")
                     btn_delete = QPushButton("Eliminar")
                     
+                    # Conexiones con clausuras lambda para inyectar de forma segura el f_id iterado
                     btn_edit.clicked.connect(lambda checked, fid=f_id: self.editar_pago_general(fid))
                     btn_delete.clicked.connect(lambda checked, fid=f_id: self.eliminar_pago_general(fid))
                     
@@ -323,6 +349,7 @@ class PagoView(QWidget):
                     header_layout.addLayout(card_buttons)
                     card_layout.addLayout(header_layout)
 
+                    # Inicializa la tabla embebida secundaria para listar los pagos de esta tarjeta
                     sub_table = QTableWidget()
                     sub_table.setObjectName(f"table_factura_{f_id}")
                     sub_table.setColumnCount(5)
@@ -344,6 +371,7 @@ class PagoView(QWidget):
                     card_layout.addWidget(sub_table)
                     self.scroll_layout.addWidget(card)
                 
+                # Mantiene las tarjetas alineadas al tope superior del área con scroll
                 self.scroll_layout.addStretch()
 
         except Exception as e:
@@ -351,6 +379,7 @@ class PagoView(QWidget):
 
     # === CONTROLES DE EDICIÓN PARA LA ENTRADA GENERAL ===
     def obtener_id_desde_subtabla(self, factura_id):
+        """Busca dinámicamente una subtabla de tarjeta por nombre y retorna el ID del pago seleccionado."""
         tabla = self.findChild(QTableWidget, f"table_factura_{factura_id}")
         if tabla:
             fila = tabla.currentRow()
@@ -359,6 +388,7 @@ class PagoView(QWidget):
         return None
 
     def editar_pago_general(self, factura_id):
+        """Abre el formulario para editar un pago seleccionado desde el panel de tarjetas."""
         pago_id = self.obtener_id_desde_subtabla(factura_id)
         if not pago_id:
             QMessageBox.warning(self, "Atención", "Seleccione una fila en la tabla de la factura correspondiente.")
@@ -373,6 +403,7 @@ class PagoView(QWidget):
             QMessageBox.critical(self, "Error", str(e))
 
     def eliminar_pago_general(self, factura_id):
+        """Elimina un pago seleccionado desde el panel de tarjetas previa confirmación."""
         pago_id = self.obtener_id_desde_subtabla(factura_id)
         if not pago_id:
             QMessageBox.warning(self, "Atención", "Seleccione una fila en la tabla de la factura correspondiente.")
@@ -386,12 +417,14 @@ class PagoView(QWidget):
 
     # === CONTROLES DE EDICIÓN PARA VISTA INDIVIDUAL (DESDE FACTURAS) ===
     def obtener_id_seleccionado(self):
+        """Retorna el ID del pago seleccionado de la tabla en modo vista individual."""
         if not self.table:
             return None
         fila = self.table.currentRow()
         return int(self.table.item(fila, 0).text()) if fila >= 0 else None
 
     def crear_pago(self):
+        """Instancia el formulario para registrar un nuevo cobro asignado a la factura actual."""
         if self.factura_id is None:
             return
         dialog = PagoForm(self, factura_id=self.factura_id)
@@ -403,6 +436,7 @@ class PagoView(QWidget):
                 QMessageBox.critical(self, "Error", str(e))
 
     def editar_pago(self):
+        """Recupera los datos del pago seleccionado y abre el modal de edición."""
         pago_id = self.obtener_id_seleccionado()
         if not pago_id: return
         try:
@@ -415,6 +449,7 @@ class PagoView(QWidget):
             QMessageBox.critical(self, "Error", str(e))
 
     def eliminar_pago(self):
+        """Remueve el pago seleccionado de la tabla única en modo vista individual."""
         pago_id = self.obtener_id_seleccionado()
         if not pago_id or QMessageBox.question(self, "Confirmar", "¿Eliminar pago?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return
@@ -423,5 +458,3 @@ class PagoView(QWidget):
             self.cargar_pagos()
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
-            
-            
