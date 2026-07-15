@@ -207,6 +207,42 @@ class PagoViewSet(viewsets.ModelViewSet):
         if factura_id is not None:
             queryset = queryset.filter(factura_id=factura_id)
         return queryset
+    
+    
+    # NUEVO MÉTODO EXCLUSIVO PARA LA WEB
+    @action(detail=False, methods=['post'], url_path='registrar-pago-web', permission_classes=[AllowAny])
+    def registrar_pago_web(self, request):
+        id_transaccion_mp = request.data.get('referencia') # El payment_id de Mercado Pago
+        factura_id = request.data.get('factura')
+        monto = request.data.get('monto')
+        metodo_pago = request.data.get('metodo_pago', 'tarjeta')
+
+        # 1. Control de duplicados: si ya existe este pago completado, respondemos exitosamente sin validar de nuevo
+        if Pago.objects.filter(referencia=id_transaccion_mp, estado='completado').exists():
+            return Response(
+                {"mensaje": "Pago ya registrado anteriormente y procesado con éxito."}, 
+                status=status.HTTP_200_OK
+            )
+
+        # 2. Si es una notificación nueva, procedemos a crear el registro
+        # Esto llamará al clean() del modelo, ejecutando la validación estricta de saldo pendiente
+        datos_pago = {
+            "factura": factura_id,
+            "monto": monto,
+            "metodo_pago": metodo_pago,
+            "estado": "completado",
+            "referencia": id_transaccion_mp
+        }
+
+        serializer = self.get_serializer(data=datos_pago)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"mensaje": "Pago web registrado correctamente", "data": serializer.data}, 
+                status=status.HTTP_201_CREATED
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # EnvioViewSet
 class EnvioViewSet(viewsets.ModelViewSet):
