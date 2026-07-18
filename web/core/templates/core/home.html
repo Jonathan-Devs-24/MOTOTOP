@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 shadow-sm border border-warning-subtle">
+    <div class="container-fluid py-3 text-center">
+        <h1 class="display-5 fw-bold text-dark">Bienvenidos a <span class="text-warning text-uppercase">MOTO-TOP</span></h1>
+        <p class="col-md-8 mx-auto fs-5 text-muted">Distribuidora líder de repuestos para motocicletas en Goya y toda la región. Calidad, stock permanente y envíos rápidos garantizados.</p>
+    </div>
+</div>
+
+<h2 class="text-center fw-bold text-dark my-4 text-uppercase tracking-wide">🔥 Promociones de la Semana 🔥</h2>
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4 justify-content-center">
+    {% if productos_en_promocion %}
+        {% for prod in productos_en_promocion %}
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 position-relative">
+                    <span class="position-absolute top-0 start-0 m-2 badge bg-danger fs-6">{{ prod.descuento_str }}</span>
+                    {% if prod.imagen %}
+                        <img src="{{ prod.imagen }}" class="card-img-top p-3 object-fit-contain" style="height: 200px;" alt="{{ prod.nombre }}">
+                    {% else %}
+                        <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Sin Imagen</span>
+                        </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column text-center">
+                        <h5 class="card-title fw-bold text-secondary mb-3">{{ prod.nombre }}</h5>
+                        <div class="mt-auto">
+                            <p class="text-decoration-line-through text-muted small mb-0">Antes: ${{ prod.precio_base|floatformat:2 }}</p>
+                            <p class="text-danger fs-4 fw-bold mb-0">Ahora: ${{ prod.precio_final|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center my-5">
+            <div class="alert alert-info border-0 shadow-sm py-4">
+                <p class="fs-5 mb-0 text-muted">No hay promociones disponibles en este momento. ¡Volvé a visitarnos pronto!</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
