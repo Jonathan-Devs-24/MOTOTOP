@@ -108,6 +108,13 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = 'static/'
+
+# AGREGAR ESTA LÍNEA:
+STATICFILES_DIRS = [
+    BASE_DIR / 'core' / 'static',
+]
+
+
+# Guardar la sesión en cookies firmadas
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'

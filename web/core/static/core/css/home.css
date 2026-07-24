@@ -1,0 +1,17 @@
+/* \core\static\core\css\home.css */
+/* Tarjetas de Productos */
+.card-promo-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+}
+
+.product-img {
+    height: 200px;
+    object-fit: contain;
+    padding: 1rem;
+}
+
+.no-img-placeholder {
+    height: 200px;
+}

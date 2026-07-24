@@ -1,40 +1,68 @@
+<!-- web/core/templates/core/base.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOTO-TOP - Distribuidora de Repuestos</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS Global -->
+    <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+    <!-- CSS Específico de cada página -->
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-warning" href="{% url 'home' %}">MOTO-TOP</a>
-            <button class="navbar-expand-lg navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="{% url 'home' %}">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Consultar Pedido</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Contacto / Solicitar Vendedor</a></li>
-                </ul>
+    <!-- Header / Navbar Fijo -->
+    <header class="sticky-top z-3">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
+            <div class="container d-flex justify-content-between align-items-center">
+                
+                <!-- Extremo Izquierdo: Logo de la Empresa -->
+                <a href="{% url 'home' %}" class="d-flex align-items-center">
+                    <img src="{% static 'core/img/logo.png' %}" alt="Logo MOTO-TOP" class="header-logo">
+                </a>
+
+                <!-- Extremo Derecho: Botón / Menú de Usuario -->
+                <div class="d-flex align-items-center gap-3">
+                    {% if request.session.username %}
+                        <span class="text-light small">Hola, <strong class="text-warning">{{ request.session.username }}</strong></span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-warning btn-sm fw-semibold text-uppercase">
+                            Iniciar Sesión
+                        </a>
+                    {% endif %}
+                </div>
+
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <!-- Contenido Principal -->
-    <div class="container my-5">
+    <!-- Messages / Notificaciones globales -->
+    {% if messages and request.resolver_match.url_name != 'login' %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Body / Contenido Principal -->
+    <main class="container my-5 flex-grow-1 d-flex flex-column justify-content-center">
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4 mt-auto">
+    <footer class="bg-dark text-white text-center py-4 mt-auto border-top border-secondary">
         <div class="container">
-            <p class="mb-0">&copy; 2026 MOTO-TOP. Todos los derechos reservados. Goya, Corrientes.</p>
+            <p class="mb-0 text-muted small">&copy; 2026 MOTO-TOP. Todos los derechos reservados. Goya, Corrientes.</p>
         </div>
     </footer>
 

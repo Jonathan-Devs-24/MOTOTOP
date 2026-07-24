@@ -1,0 +1,30 @@
+/* core\static\core\css\base.css*/
+/* Layout Principal */
+body {
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+}
+
+/* Header & Navbar */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.header-logo {
+    max-height: 40px;
+    width: auto;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    border-top: 1px solid #495057;
+}

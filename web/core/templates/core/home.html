@@ -1,4 +1,10 @@
+<!-- web/core/templates/core/home.html -->
 {% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'core/css/home.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="p-5 mb-4 bg-white rounded-3 shadow-sm border border-warning-subtle">
@@ -15,11 +21,11 @@
         {% for prod in productos_en_promocion %}
             <div class="col">
                 <div class="card h-100 shadow-sm border-0 position-relative">
-                    <span class="position-absolute top-0 start-0 m-2 badge bg-danger fs-6">{{ prod.descuento_str }}</span>
+                    <span class="badge bg-danger fs-6 card-promo-badge">{{ prod.descuento_str }}</span>
                     {% if prod.imagen %}
-                        <img src="{{ prod.imagen }}" class="card-img-top p-3 object-fit-contain" style="height: 200px;" alt="{{ prod.nombre }}">
+                        <img src="{{ prod.imagen }}" class="card-img-top product-img" alt="{{ prod.nombre }}">
                     {% else %}
-                        <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <div class="bg-secondary-subtle d-flex align-items-center justify-content-center no-img-placeholder">
                             <span class="text-muted">Sin Imagen</span>
                         </div>
                     {% endif %}
@@ -42,3 +48,4 @@
     {% endif %}
 </div>
 {% endblock %}
+

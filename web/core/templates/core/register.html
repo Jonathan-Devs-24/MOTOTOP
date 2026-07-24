@@ -1,0 +1,106 @@
+<!-- web/core/templates/core/register.html -->
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'core/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-4">
+                
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-dark">Crear Cuenta</h3>
+                    <p class="text-muted small">Completá tus datos para registrarte como cliente</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show small py-2" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST" action="{% url 'register' %}">
+                    {% csrf_token %}
+                    
+                    <h6 class="text-warning fw-bold border-bottom pb-1 mb-3">Datos de Cuenta</h6>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="username" class="form-label text-secondary small fw-semibold">Nombre de Usuario</label>
+                            <input type="text" name="username" id="username" class="form-control" required placeholder="Ej: juanperez">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label text-secondary small fw-semibold">Contraseña</label>
+                            <input type="password" name="password" id="password" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password_confirm" class="form-label text-secondary small fw-semibold">Confirmar Contraseña</label>
+                            <input type="password" name="password_confirm" id="password_confirm" class="form-control" required placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <h6 class="text-warning fw-bold border-bottom pb-1 mb-3 mt-2">Datos Personales</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombre" class="form-label text-secondary small fw-semibold">Nombre</label>
+                            <input type="text" name="nombre" id="nombre" class="form-control" required placeholder="Juan">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="apellido" class="form-label text-secondary small fw-semibold">Apellido</label>
+                            <input type="text" name="apellido" id="apellido" class="form-control" placeholder="Pérez">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="nro_documento" class="form-label text-secondary small fw-semibold">N° Documento (DNI/CUIT)</label>
+                            <input type="text" name="nro_documento" id="nro_documento" class="form-control" required placeholder="12345678">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label text-secondary small fw-semibold">Teléfono</label>
+                            <input type="text" name="telefono" id="telefono" class="form-control" required placeholder="3777-123456">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="email" class="form-label text-secondary small fw-semibold">Correo Electrónico</label>
+                            <input type="email" name="email" id="email" class="form-control" required placeholder="juan.perez@email.com">
+                        </div>
+                    </div>
+
+                    <h6 class="text-warning fw-bold border-bottom pb-1 mb-3 mt-2">Ubicación</h6>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="direccion" class="form-label text-secondary small fw-semibold">Dirección</label>
+                            <input type="text" name="direccion" id="direccion" class="form-control" required placeholder="Calle San Martín 123">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="codigo_postal" class="form-label text-secondary small fw-semibold">Código Postal</label>
+                            <input type="text" name="codigo_postal" id="codigo_postal" class="form-control" required placeholder="3450">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="localidad" class="form-label text-secondary small fw-semibold">Localidad</label>
+                            <input type="text" name="localidad" id="localidad" class="form-control" required placeholder="Goya">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="provincia" class="form-label text-secondary small fw-semibold">Provincia</label>
+                            <input type="text" name="provincia" id="provincia" class="form-control" required placeholder="Corrientes">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 fw-bold text-uppercase py-2 mb-3">
+                        Registrarme
+                    </button>
+
+                    <div class="text-center">
+                        <span class="text-muted small">¿Ya tenés una cuenta? </span>
+                        <a href="{% url 'login' %}" class="small text-warning fw-bold text-decoration-none">Iniciá sesión acá</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
