@@ -7,45 +7,163 @@
 {% endblock %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-white rounded-3 shadow-sm border border-warning-subtle">
-    <div class="container-fluid py-3 text-center">
-        <h1 class="display-5 fw-bold text-dark">Bienvenidos a <span class="text-warning text-uppercase">MOTO-TOP</span></h1>
-        <p class="col-md-8 mx-auto fs-5 text-muted">Distribuidora líder de repuestos para motocicletas en Goya y toda la región. Calidad, stock permanente y envíos rápidos garantizados.</p>
+<!-- Carrusel Principal / Banner Dinámico -->
+<div id="carouselHome" class="carousel slide mb-5 shadow-sm rounded-3 overflow-hidden" data-bs-ride="carousel" data-bs-interval="4000">
+    
+    <!-- Indicadores (puntitos) -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselHome" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselHome" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        {% if productos_en_promocion %}
+            {% for prod in productos_en_promocion %}
+                <button type="button" data-bs-target="#carouselHome" data-bs-slide-to="{{ forloop.counter|add:1 }}" aria-label="Slide Promo {{ forloop.counter }}"></button>
+            {% endfor %}
+        {% endif %}
     </div>
+
+    <!-- Diapositivas -->
+    <div class="carousel-inner">
+        
+        <!-- SLIDE 1: Presentación Distribuidora -->
+        <div class="carousel-item active">
+            <div class="d-flex flex-column align-items-center justify-content-center bg-dark text-white p-5 text-center" style="height: 320px; background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);">
+                <img src="{% static 'core/img/logo.png' %}" alt="MOTO-TOP" class="mb-3" style="max-height: 90px; object-fit: contain;">
+                <h2 class="display-6 fw-bold text-warning text-uppercase">DISTRIBUIDORA MOTO-TOP</h2>
+                <p class="fs-5 text-light col-md-8 mb-0">Calidad, stock permanente y envíos a toda la provincia y región.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Banner de Envíos y Cobertura -->
+        <div class="carousel-item">
+            <div class="d-flex flex-column align-items-center justify-content-center bg-dark text-white p-5 text-center" style="height: 320px; background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);">
+                <span class="badge bg-warning text-dark fs-6 mb-2 text-uppercase fw-bold">Envíos a la Región</span>
+                <h2 class="display-6 fw-bold text-white text-uppercase">LLEGAMOS A DONDE ESTÁS</h2>
+                <p class="fs-5 text-light col-md-8 mb-0">Atención personalizada en Corrientes, Misiones, Chaco y Formosa.</p>
+            </div>
+        </div>
+
+        <!-- SLIDES DINÁMICOS: Productos en Promoción (Si existen en la API) -->
+        {% if productos_en_promocion %}
+            {% for prod in productos_en_promocion %}
+                <div class="carousel-item">
+                    {% if prod.img %}
+                        <img src="{{ prod.img }}" class="d-block w-100 bg-white" alt="{{ prod.nombre }}" style="height: 320px; object-fit: contain;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-secondary" style="height: 320px;">
+                            <span class="text-white fs-3 fw-bold">{{ prod.nombre }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded-3 p-3">
+                        <span class="badge bg-danger mb-2 fs-6">{{ prod.descuento_str }}</span>
+                        <h3 class="fw-bold text-warning text-uppercase mb-1">{{ prod.nombre }}</h3>
+                        <p class="mb-0 fs-5">¡Precio Oferta! <strong>${{ prod.precio_final|floatformat:2 }}</strong></p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+    </div>
+
+    <!-- Flechas Anterior y Siguiente -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselHome" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselHome" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+    </button>
 </div>
 
-<h2 class="text-center fw-bold text-dark my-4 text-uppercase tracking-wide">🔥 Promociones de la Semana 🔥</h2>
-
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4 justify-content-center">
-    {% if productos_en_promocion %}
+<!-- SECCIÓN 1: Promociones de la Semana -->
+{% if productos_en_promocion %}
+<div class="mb-5">
+    <h3 class="fw-bold text-dark mb-4 text-uppercase border-bottom pb-2">🔥 Promociones de la Semana 🔥</h3>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
         {% for prod in productos_en_promocion %}
             <div class="col">
-                <div class="card h-100 shadow-sm border-0 position-relative">
-                    <span class="badge bg-danger fs-6 card-promo-badge">{{ prod.descuento_str }}</span>
-                    {% if prod.imagen %}
-                        <img src="{{ prod.imagen }}" class="card-img-top product-img" alt="{{ prod.nombre }}">
+                <div class="card h-100 shadow-sm border-warning border-1 position-relative">
+                    <span class="badge bg-danger fs-6 card-promo-badge position-absolute top-0 end-0 m-2">{{ prod.descuento_str }}</span>
+                    {% if prod.img %}
+                        <img src="{{ prod.img }}" class="card-img-top product-img" alt="{{ prod.nombre }}" style="height: 180px; object-fit: contain;">
                     {% else %}
-                        <div class="bg-secondary-subtle d-flex align-items-center justify-content-center no-img-placeholder">
+                        <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 180px;">
                             <span class="text-muted">Sin Imagen</span>
                         </div>
                     {% endif %}
                     <div class="card-body d-flex flex-column text-center">
-                        <h5 class="card-title fw-bold text-secondary mb-3">{{ prod.nombre }}</h5>
+                        <h6 class="card-title fw-bold text-dark">{{ prod.nombre }}</h6>
                         <div class="mt-auto">
                             <p class="text-decoration-line-through text-muted small mb-0">Antes: ${{ prod.precio_base|floatformat:2 }}</p>
-                            <p class="text-danger fs-4 fw-bold mb-0">Ahora: ${{ prod.precio_final|floatformat:2 }}</p>
+                            <p class="text-danger fs-5 fw-bold mb-2">Ahora: ${{ prod.precio_final|floatformat:2 }}</p>
+                            
+                            {% if esta_autenticado %}
+                                <button class="btn btn-warning btn-sm w-100 fw-semibold">Agregar al Pedido</button>
+                            {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-outline-warning btn-sm w-100 fw-semibold" title="Iniciá sesión para hacer un pedido">Iniciá sesión para pedir</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- SECCIÓN 2: Catálogo Completo de Productos -->
+<div>
+    <h3 class="fw-bold text-dark mb-4 text-uppercase border-bottom pb-2">Catálogo de Productos</h3>
+    
+    {% if todos_los_productos %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for prod in todos_los_productos %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if prod.en_promocion %}
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-2">{{ prod.descuento_str }}</span>
+                        {% endif %}
+
+                        {% if prod.img %}
+                            <img src="{{ prod.img }}" class="card-img-top product-img" alt="{{ prod.nombre }}" style="height: 180px; object-fit: contain;">
+                        {% else %}
+                            <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <span class="text-muted">Sin Imagen</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column text-center">
+                            <h6 class="card-title fw-semibold text-dark">{{ prod.nombre }}</h6>
+                            <p class="small text-muted mb-2">Stock disponible: {{ prod.stock }} u.</p>
+
+                            <div class="mt-auto">
+                                {% if prod.en_promocion %}
+                                    <span class="text-decoration-line-through text-muted small">${{ prod.precio_base|floatformat:2 }}</span>
+                                    <p class="text-danger fs-5 fw-bold mb-2">${{ prod.precio_final|floatformat:2 }}</p>
+                                {% else %}
+                                    <p class="text-dark fs-5 fw-bold mb-2">${{ prod.precio_base|floatformat:2 }}</p>
+                                {% endif %}
+
+                                {% if esta_autenticado %}
+                                    <button class="btn btn-warning btn-sm w-100 fw-semibold">Agregar al Pedido</button>
+                                {% else %}
+                                    <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm w-100" title="Iniciá sesión para realizar un pedido">Iniciá sesión para comprar</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     {% else %}
-        <div class="col-12 text-center my-5">
-            <div class="alert alert-info border-0 shadow-sm py-4">
-                <p class="fs-5 mb-0 text-muted">No hay promociones disponibles en este momento. ¡Volvé a visitarnos pronto!</p>
-            </div>
+        <div class="alert alert-info text-center py-4">
+            <p class="mb-0 text-muted">No se encontraron productos registrados en el sistema.</p>
         </div>
     {% endif %}
+
+    {% block extra_js %}
+        <script src="{% static 'core/js/home.js' %}"></script>
+    {% endblock %}
 </div>
 {% endblock %}
-

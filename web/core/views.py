@@ -7,110 +7,83 @@ from django.utils import timezone
 import requests
 
 def home(request):
-    promociones_activas = [] # Lista vacia para almacenar promociones activas
-    ahora = timezone.now().date() # Obtener la fecha actual respetando zona horaria
-    
-    # Inicializamos la lista fuera del bloque para asegurar que exista si ocurre una excepción
-    productos_en_promocion = [] 
-    
+    todos_los_productos = []
+    productos_en_promocion = []
+    promociones_activas = []
+    ahora = timezone.now().date()
+
     try:
-        # Realiza la petición GET a la API para obtener promociones con un tiempo de espera de 5 segundos
-        response_promo = requests.get(f"{settings.API_BASE_URL}promociones/", timeout=5)
-        
-        #verificamos que la API responda correctamente
-        if response_promo.status_code == 200:
-            
-            # Convertimos la respuesta a JSON
-            promociones = response_promo.json()
-            
-            # CONTROL DE SEGURIDAD: Validamos que 'promociones' sea efectivamente una lista antes de iterar
+        # 1. Obtener Promociones Activas desde la API
+        res_promo = requests.get(f"{settings.API_BASE_URL}promociones/", timeout=5)
+        if res_promo.status_code == 200:
+            promociones = res_promo.json()
             if isinstance(promociones, list):
-                
-                # Recorremos cada una de las promociones devultas por el backend
                 for promo in promociones:
-                    
-                    # Aseguramos que cada elemento interno sea un diccionario antes de usar .get()
                     if isinstance(promo, dict):
-                        
-                        # Obtenemos las cadena de texto correspondientes a las 
-                        # fechas de inicio y fin de la promoción
                         f_inicio = promo.get('fecha_inicio')
                         f_fin = promo.get('fecha_fin')
-                        
-                        # Validamos que ambos campos de ehcas existan y no sean nulos
                         if f_inicio and f_fin:
-                            
                             ini = timezone.datetime.strptime(f_inicio, '%Y-%m-%d').date()
                             fin = timezone.datetime.strptime(f_fin, '%Y-%m-%d').date()
-                            
-                            # Comprueba si la fecha actual se encuentra dentro del rango de vigencia de la promocion
                             if ini <= ahora <= fin:
                                 promociones_activas.append(promo)
-                        
-        # Realizamos la petición GET al endpoint que vincula los productos con las promociones con un tiempo de espera de 5 segundos
-        response_prod_promo = requests.get(f"{settings.API_BASE_URL}producto-promociones/", timeout=5)
-        
-        # Inicializa la lista donde se guardará la información final procesada de los porductos en oferta
-        productos_en_promocion = []
-        
-        # Validamos que la petición a la API sea exitosa
-        if response_prod_promo.status_code == 200 and promociones_activas:
-            
-            # Generamos una lista rápida con los IDs únicos de todas las promociones que estan activas
-            id_promos_activas = [p['id'] for p in promociones_activas]
-            
-            # Copnvertimos la respuesta a un formato JSON
-            relaciones = response_prod_promo.json()
-            
-            # Realiza una petición GET para obtener el listado completo de prodcutos
-            response_productos = requests.get(f"{settings.API_BASE_URL}productos/", timeout=5)
-            
-            # Verificamos el OK 200
-            if response_productos.status_code == 200: 
-                
-                # Transforma la lista de productos en un diccionario
-                productos_dic = {p['id']: p for p in response_productos.json()}
-                
-                # Recorremos cada relacion producto promocion recibido por el backend
+
+        # Map de relaciones Producto -> Promoción
+        id_promos_activas = [p['id'] for p in promociones_activas]
+        relaciones_promo = {}
+
+        if id_promos_activas:
+            res_rel = requests.get(f"{settings.API_BASE_URL}producto-promociones/", timeout=5)
+            if res_rel.status_code == 200:
+                relaciones = res_rel.json()
                 if isinstance(relaciones, list):
                     for rel in relaciones:
-                        if isinstance(rel, dict):
-                            
-                            # comprobamso si el ID de la promocionde de este vinculo forma parte de las promociones activas
-                            if rel['promocion'] in id_promos_activas:
-                                
-                                # Obtemos el ID de la promoción involucrada en el descuento
-                                prod_id = rel['producto']
-                                
-                                # Verificamos si el ID del prodcuto existe           
-                                if prod_id in productos_dic:
-                                    
-                                    # Recupera la info. completa del prodcuto correspondiente
-                                    prod = productos_dic[prod_id]
-                                    
-                                    precio_base = float(prod['precio_base'])
-                                    valor_descuento = float(rel['valor_descuento'])
-                                    
-                                    # Determinando la lógica de cálculo evaluado si el tipo de descuento es en porcentaje
-                                    if rel['tipo_descuento'].lower() == 'porcentaje':
-                                        precio_final = precio_base * (1 - (valor_descuento / 100))
-                                    else:
-                                        precio_final = max(0.0, precio_base - valor_descuento)
-                                        
-                                    productos_en_promocion.append({
-                                        'nombre': prod['nombre'],
-                                        'imagen': prod.get('img'),
-                                        'precio_base': precio_base,
-                                        'precio_final': precio_final,
-                                        # Genera la cadena de texto que se mostrará en la etiqueta de oferta (Ej: "15% OFF" o "$500 OFF")
-                                        'descuento_str': f"{int(valor_descuento)}% OFF" if rel['tipo_descuento'].lower() == 'porcentaje' else f"${valor_descuento} OFF"
-                                    })
-                                    
-    except requests.exceptions.RequestException:
-        productos_en_promocion = []
-        
-    return render(request, 'core/home.html', {'productos_en_promocion': productos_en_promocion})
+                        if isinstance(rel, dict) and rel.get('promocion') in id_promos_activas:
+                            relaciones_promo[rel['producto']] = rel
 
+        # 2. Obtener Productos
+        res_productos = requests.get(f"{settings.API_BASE_URL}productos/", timeout=5)
+        if res_productos.status_code == 200:
+            data_prod = res_productos.json()
+            productos_lista = data_prod.get('results', data_prod) if isinstance(data_prod, dict) else data_prod
+
+            if isinstance(productos_lista, list):
+                for prod in productos_lista:
+                    precio_base = float(prod['precio_base'])
+                    prod_id = prod['id']
+
+                    if prod_id in relaciones_promo:
+                        rel = relaciones_promo[prod_id]
+                        valor_descuento = float(rel['valor_descuento'])
+
+                        if rel['tipo_descuento'].lower() == 'porcentaje':
+                            precio_final = precio_base * (1 - (valor_descuento / 100))
+                            descuento_str = f"{int(valor_descuento)}% OFF"
+                        else:
+                            precio_final = max(0.0, precio_base - valor_descuento)
+                            descuento_str = f"${valor_descuento} OFF"
+
+                        prod['en_promocion'] = True
+                        prod['precio_final'] = precio_final
+                        prod['descuento_str'] = descuento_str
+                        
+                        productos_en_promocion.append(prod)
+                    else:
+                        prod['en_promocion'] = False
+                        prod['precio_final'] = precio_base
+
+                    todos_los_productos.append(prod)
+
+    except requests.exceptions.RequestException:
+        messages.error(request, 'No se pudo conectar con el catálogo de la API.')
+
+    context = {
+        'todos_los_productos': todos_los_productos,
+        'productos_en_promocion': productos_en_promocion,
+        'promociones_activas': promociones_activas, # Pass directo para el carrusel
+        'esta_autenticado': bool(request.session.get('access_token')),
+    }
+    return render(request, 'core/home.html', context)
 
 def login_view(request):
     # Si ya existe un token en la cookie de sesión, redirige al home
@@ -247,5 +220,5 @@ def logout_view(request):
     request.session.flush()
     messages.info(request, 'Sesión cerrada correctamente.')
     return redirect('home')
-            
-            
+
+
