@@ -55,13 +55,15 @@ def home(request):
                     if prod_id in relaciones_promo:
                         rel = relaciones_promo[prod_id]
                         valor_descuento = float(rel['valor_descuento'])
+                        tipo_desc = str(rel.get('tipo_descuento', '')).strip().lower()
 
-                        if rel['tipo_descuento'].lower() == 'porcentaje':
-                            precio_final = precio_base * (1 - (valor_descuento / 100))
-                            descuento_str = f"{int(valor_descuento)}% OFF"
+                        # Acepta '%', 'porcentaje', 'porcentual', etc.
+                        if tipo_desc in ['porcentaje', 'porcentual', '%']:
+                            precio_final = precio_base * (1 - (valor_descuento / 100.0))
+                            descuento_str = f"-{int(valor_descuento)}%"
                         else:
                             precio_final = max(0.0, precio_base - valor_descuento)
-                            descuento_str = f"${valor_descuento} OFF"
+                            descuento_str = f"-${valor_descuento:.2f}"
 
                         prod['en_promocion'] = True
                         prod['precio_final'] = precio_final
@@ -80,10 +82,12 @@ def home(request):
     context = {
         'todos_los_productos': todos_los_productos,
         'productos_en_promocion': productos_en_promocion,
-        'promociones_activas': promociones_activas, # Pass directo para el carrusel
+        'promociones_activas': promociones_activas,
         'esta_autenticado': bool(request.session.get('access_token')),
     }
     return render(request, 'core/home.html', context)
+
+
 
 def login_view(request):
     # Si ya existe un token en la cookie de sesión, redirige al home
