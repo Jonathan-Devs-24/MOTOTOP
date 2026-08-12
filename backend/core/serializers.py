@@ -349,6 +349,7 @@ class CompraReadSerializer(serializers.ModelSerializer):
         fields = ['id', 'proveedor', 'fecha_compra', 'estado', 'total', 'detalles']
 
 # Zona Serializer
+
 class ZonaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zona
