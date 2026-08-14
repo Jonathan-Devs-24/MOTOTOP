@@ -1,0 +1,158 @@
+<!-- web/core/templates/core/mis_pedidos.html -->
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <h2 class="fw-bold text-dark text-uppercase mb-0">
+      <i class="bi bi-box-seam text-warning me-2"></i>Estado de Mis Pedidos
+    </h2>
+    <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Volver al Catálogo
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for pedido in pedidos %}
+      <div class="col-12">
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+          
+          <!-- Encabezado de la Tarjeta -->
+          <div class="card-header bg-dark text-white d-flex flex-wrap justify-content-between align-items-center py-3">
+            <div>
+              <span class="fw-bold fs-5 text-warning">Pedido #{{ pedido.id }}</span>
+              <span class="text-secondary ms-2 small">({{ pedido.fecha_pedido|slice:":10" }})</span>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+              {% if pedido.estado == 'confirmado' %}
+                <span class="badge bg-success text-uppercase px-3 py-2">Confirmado</span>
+              {% elif pedido.estado == 'pendiente' %}
+                <span class="badge bg-warning text-dark text-uppercase px-3 py-2">Pendiente</span>
+              {% elif pedido.estado == 'cancelado' %}
+                <span class="badge bg-danger text-uppercase px-3 py-2">Cancelado</span>
+              {% endif %}
+
+              {% if pedido.facturada %}
+                <a href="{% url 'ver_factura' pedido.id %}" class="btn btn-outline-info btn-sm text-white fw-semibold">
+                  <i class="bi bi-receipt me-1"></i> Factura
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card-body p-4">
+            
+            <!-- SECCIÓN DE SEGUIMIENTO LOGÍSTICO (REQUERIMIENTO CASO DE ESTUDIO) -->
+            <div class="p-3 mb-4 rounded-3 bg-light border">
+              <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-truck text-warning me-2"></i>Estado del Envío y Logística
+              </h6>
+
+              {% if pedido.envio %}
+                <!-- Timeline visual de estados -->
+                <div class="row text-center mb-3 g-2">
+                  <div class="col-3">
+                    <span class="badge w-100 py-2 {% if pedido.envio.estado_envio == 'recibido' or pedido.envio.estado_envio == 'preparacion' or pedido.envio.estado_envio == 'enviado' or pedido.envio.estado_envio == 'entregado' %}bg-success{% else %}bg-secondary{% endif %}">
+                      1. Recibido
+                    </span>
+                  </div>
+                  <div class="col-3">
+                    <span class="badge w-100 py-2 {% if pedido.envio.estado_envio == 'preparacion' or pedido.envio.estado_envio == 'enviado' or pedido.envio.estado_envio == 'entregado' %}bg-success{% else %}bg-secondary{% endif %}">
+                      2. En Preparación
+                    </span>
+                  </div>
+                  <div class="col-3">
+                    <span class="badge w-100 py-2 {% if pedido.envio.estado_envio == 'enviado' or pedido.envio.estado_envio == 'entregado' %}bg-success{% else %}bg-secondary{% endif %}">
+                      3. Enviado
+                    </span>
+                  </div>
+                  <div class="col-3">
+                    <span class="badge w-100 py-2 {% if pedido.envio.estado_envio == 'entregado' %}bg-success{% else %}bg-secondary{% endif %}">
+                      4. Entregado
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Detalle de transporte y fechas cuando el envío está en curso o completado -->
+                <div class="row g-3 small text-secondary border-top pt-3">
+                  <div class="col-sm-6 col-md-3">
+                    <span class="text-muted d-block">Empresa de Flete:</span>
+                    <strong class="text-dark">{{ pedido.envio.empresa_transporte|default:"A coordinar" }}</strong>
+                  </div>
+                  
+                  <div class="col-sm-6 col-md-3">
+                    <span class="text-muted d-block">Código de Seguimiento:</span>
+                    <strong class="text-dark">{{ pedido.envio.tracking_code|default:"Pendiente" }}</strong>
+                  </div>
+
+                  <div class="col-sm-6 col-md-3">
+                    <span class="text-muted d-block">Fecha de Envío:</span>
+                    <strong class="text-dark">
+                      {% if pedido.envio.fecha_envio %}{{ pedido.envio.fecha_envio|slice:":10" }}{% else %}A despachar{% endif %}
+                    </strong>
+                  </div>
+
+                  <div class="col-sm-6 col-md-3">
+                    <span class="text-muted d-block">Fecha Estimada / Entrega:</span>
+                    <strong class="text-dark">
+                      {% if pedido.envio.fecha_entrega %}
+                        {{ pedido.envio.fecha_entrega|slice:":10" }} (Entregado)
+                      {% elif pedido.envio.fecha_estimada %}
+                        {{ pedido.envio.fecha_estimada|slice:":10" }}
+                      {% else %}
+                        Por confirmar
+                      {% endif %}
+                    </strong>
+                  </div>
+                </div>
+
+              {% else %}
+                <div class="text-muted small">
+                  <i class="bi bi-info-circle me-1"></i> El pedido se encuentra en recepción central. El despacho y la guía de flete se asignarán una vez confirmado.
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Tabla de Productos del Pedido -->
+            <h6 class="fw-bold text-secondary mb-3">Detalle de Repuestos:</h6>
+            <div class="table-responsive mb-3">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Producto</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-end">Precio Unitario</th>
+                    <th class="text-end">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for det in pedido.detalles %}
+                    <tr>
+                      <td class="fw-semibold">{{ det.producto.nombre }}</td>
+                      <td class="text-center">{{ det.cantidad }} u.</td>
+                      <td class="text-end">${{ det.precio_unitario }}</td>
+                      <td class="text-end fw-bold">${{ det.subtotal }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footer con Totales -->
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="small text-muted">Origen: <strong>{{ pedido.origen|upper }}</strong></span>
+              <div>
+                <span class="fs-6 me-2 text-muted">Total del Pedido:</span>
+                <span class="fs-4 fw-bold text-danger">${{ pedido.total }}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

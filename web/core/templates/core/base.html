@@ -8,26 +8,37 @@
     <title>MOTO-TOP - Distribuidora de Repuestos</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- CSS Global -->
-    <link rel="stylesheet" href="{% static 'core/css/base.css' %}" />
-    <!-- CSS Específico de cada página -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="{% static 'core/css/base.css' %}" />
     {% block extra_css %}
 
     {% endblock %}
   </head>
   <body class="bg-light d-flex flex-column min-vh-100">
-    <!-- Header / Navbar Fijo -->
+    <!-- Header / Navbar -->
     <header class="sticky-top z-3">
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
         <div class="container d-flex justify-content-between align-items-center">
-          <!-- Extremo Izquierdo: Logo de la Empresa -->
           <a href="{% url 'home' %}" class="d-flex align-items-center"><img src="{% static 'core/img/logo.png' %}" alt="Logo MOTO-TOP" class="header-logo" /></a>
 
-          <!-- Extremo Derecho: Botón / Menú de Usuario -->
           <div class="d-flex align-items-center gap-3">
+            <!-- Enlace institucional -->
+            <a href="{% url 'empresa' %}" class="btn btn-outline-warning btn-sm fw-semibold"><i class="bi bi-info-circle me-1"></i> La Empresa</a>
+
             {% if request.session.username %}
-              <span class="text-light small">Hola, <strong class="text-warning">{{ request.session.username }}</strong></span>
+              <span class="text-light small d-none d-sm-inline">Hola, <strong class="text-warning">{{ request.session.username }}</strong></span>
+
+              <!-- Visible solo si está logueado Y tiene pedidos -->
+              {% if usuario_tiene_pedidos %}
+                <a href="{% url 'mis_pedidos' %}" class="btn btn-outline-light btn-sm fw-semibold"><i class="bi bi-box-seam me-1 text-warning"></i> Mis Pedidos</a>
+              {% endif %}
+
+              <!-- Botón Ver Carrito -->
+              <button class="btn btn-warning btn-sm position-relative fw-semibold" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartSidebar">
+                <i class="bi bi-cart-fill me-1"></i> Carrito
+                <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+              </button>
+
               <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
             {% else %}
               <a href="{% url 'login' %}" class="btn btn-warning btn-sm fw-semibold text-uppercase">Iniciar Sesión</a>
@@ -37,7 +48,31 @@
       </nav>
     </header>
 
-    <!-- Messages / Notificaciones globales -->
+    <!-- Sidebar / Offcanvas del Carrito -->
+    {% if request.session.username %}
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="cartSidebar" aria-labelledby="cartSidebarLabel">
+        <div class="offcanvas-header bg-dark text-white border-bottom border-warning border-2">
+          <h5 class="offcanvas-title fw-bold text-warning text-uppercase" id="cartSidebarLabel"><i class="bi bi-cart4 me-2"></i> Tu Pedido</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
+          <!-- Lista de productos cargados -->
+          <div id="cartItemsContainer" class="flex-grow-1 overflow-auto">
+            <p class="text-muted text-center my-4">El carrito está vacío.</p>
+          </div>
+
+          <!-- Footer del Sidebar con Total y Checkout -->
+          <div class="border-top pt-3 mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fs-5 fw-bold">Total Estima:</span>
+              <span id="cartTotal" class="fs-4 fw-bold text-danger">$0.00</span>
+            </div>
+            <button id="btnCheckout" class="btn btn-warning w-100 fw-bold text-uppercase py-2" disabled><i class="bi bi-send-check-fill me-1"></i> Confirmar Pedido</button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
     {% if messages and request.resolver_match.url_name != 'login' %}
       <div class="container mt-3">
         {% for message in messages %}
@@ -49,7 +84,6 @@
       </div>
     {% endif %}
 
-    <!-- Body / Contenido Principal -->
     <main class="flex-grow-1">
       {% block content %}
 
@@ -57,93 +91,71 @@
     </main>
 
     <!-- Footer -->
-    <!-- Footer Principal (Ocupa el 100% del ancho) -->
     <footer class="bg-dark text-white pt-5 pb-3 mt-5 border-top border-warning border-3 w-100">
       <div class="container">
         <div class="row g-4">
-          <!-- Columna 1: Info Distribuidora y Logo -->
           <div class="col-12 col-md-4">
             <div class="d-flex align-items-center mb-3">
               <img src="{% static 'core/img/logo.png' %}" alt="MOTO-TOP" class="me-2" style="max-height: 40px; object-fit: contain;" />
               <h5 class="fw-bold text-warning mb-0 text-uppercase">MOTO-TOP</h5>
             </div>
-            <p class="text-secondary small mb-3">Distribuidora líder en repuestos, accesorios y herramientas para motocicletas. Envíos garantizados a toda la región.</p>
-            <div class="d-flex gap-3">
-              <a href="#" class="text-white text-decoration-none fs-5" title="Facebook"><i class="bi bi-facebook"></i></a>
-              <a href="#" class="text-white text-decoration-none fs-5" title="Instagram"><i class="bi bi-instagram"></i></a>
-              <a href="https://wa.me/5490000000000" target="_blank" class="text-success text-decoration-none fs-5" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-            </div>
+            <p class="text-secondary small mb-3">Distribuidora líder en repuestos, accesorios y herramientas para motocicletas.</p>
           </div>
-
-          <!-- Columna 2: Enlaces Rápidos -->
           <div class="col-6 col-md-2">
             <h6 class="fw-bold text-warning text-uppercase mb-3">Navegación</h6>
             <ul class="list-unstyled text-small small">
-              <li class="mb-2">
+              <li>
                 <a href="{% url 'home' %}" class="text-light text-decoration-none">Inicio</a>
               </li>
-              <li class="mb-2">
-                <a href="#" class="text-light text-decoration-none">Catálogo</a>
+              <li>
+                <a href="{% url 'empresa' %}" class="text-light text-decoration-none">La Empresa & Contacto</a>
               </li>
-              <li class="mb-2">
-                <a href="#" class="text-light text-decoration-none">Promociones</a>
-              </li>
-              <li class="mb-2">
-                <a href="#" class="text-light text-decoration-none">Contacto</a>
+              <li>
+                <a href="{% url 'mis_pedidos' %}" class="text-light text-decoration-none">Mis Pedidos</a>
               </li>
             </ul>
           </div>
-
-          <!-- Columna 3: Cobertura / Zonas -->
           <div class="col-6 col-md-2">
             <h6 class="fw-bold text-warning text-uppercase mb-3">Zonas de Envío</h6>
             <ul class="list-unstyled text-small small text-secondary">
-              <li class="mb-1">
-                <i class="bi bi-geo-alt-fill text-warning me-1"></i> Corrientes
-              </li>
-              <li class="mb-1">
-                <i class="bi bi-geo-alt-fill text-warning me-1"></i> Chaco
-              </li>
-              <li class="mb-1">
-                <i class="bi bi-geo-alt-fill text-warning me-1"></i> Misiones
-              </li>
-              <li class="mb-1">
-                <i class="bi bi-geo-alt-fill text-warning me-1"></i> Formosa
-              </li>
+              <li>Corrientes</li>
+              <li>Chaco</li>
+              <li>Misiones</li>
+              <li>Formosa</li>
             </ul>
           </div>
-
-          <!-- Columna 4: Atención al Cliente -->
           <div class="col-12 col-md-4">
             <h6 class="fw-bold text-warning text-uppercase mb-3">Atención al Cliente</h6>
-            <ul class="list-unstyled small text-secondary mb-0">
-              <li class="mb-2">
+            <ul class="list-unstyled small text-secondary">
+              <li>
                 <i class="bi bi-telephone-fill me-2 text-warning"></i> +54 (3777) 00-0000
               </li>
-              <li class="mb-2">
+              <li>
                 <i class="bi bi-envelope-fill me-2 text-warning"></i> ventas@mototop.com.ar
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-clock-fill me-2 text-warning"></i> Lun a Vie: 08:00 - 17:00 hs
               </li>
             </ul>
           </div>
         </div>
-
-        <hr class="my-4 border-secondary" />
-
-        <!-- Copyright y Créditos -->
-        <div class="row align-items-center small text-secondary">
-          <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
-            &copy;{% now 'Y' %} <strong>Distribuidora MOTO-TOP</strong>. Todos los derechos reservados..
+        <!-- Columna del Mapa (al lado de Atención al Cliente) -->
+        <div class="col-12 col-md-3 footer-map">
+          <h6>Ubicación</h6>
+          <div class="map-container">
+            <iframe src="https://maps.google.com/maps?q=UTN+Goya+Corrientes&t=&z=15&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación MOTO-TOP"></iframe>
           </div>
-          <div class="col-md-6 text-center text-md-end">
-            <span>Desarrollado para la gestión de repuestos y ventas mayoristas.</span>
+        </div>
+        <hr class="my-4 border-secondary" />
+        <div class="row align-items-center small text-secondary">
+          <div class="col-md-6 text-center text-md-start">
+            &copy;{% now 'Y' %} <strong>Distribuidora MOTO-TOP</strong>.
           </div>
         </div>
       </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'core/js/cart.js' %}"></script>
+    {% block extra_js %}
+
+    {% endblock %}
   </body>
 </html>

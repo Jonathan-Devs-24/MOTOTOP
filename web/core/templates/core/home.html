@@ -76,40 +76,44 @@
       </button>
     </div>
 
-    <!-- SECCIÓN 1: Promociones de la Semana -->
-    {% if productos_en_promocion %}
-      <div class="mb-5">
-        <h3 class="fw-bold text-dark mb-4 text-uppercase border-bottom pb-2">🔥 Promociones de la Semana 🔥</h3>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-          {% for prod in productos_en_promocion %}
-            <div class="col">
-              <div class="card h-100 shadow-sm border-warning border-1 position-relative">
-                <span class="badge bg-danger fs-6 card-promo-badge position-absolute top-0 end-0 m-2">{{ prod.descuento_str }}</span>
-                {% if prod.img %}
-                  <img src="{{ prod.img }}" class="card-img-top product-img" alt="{{ prod.nombre }}" style="height: 180px; object-fit: contain;" />
-                {% else %}
-                  <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 180px;">
-                    <span class="text-muted">Sin Imagen</span>
-                  </div>
-                {% endif %}
-                <div class="card-body d-flex flex-column text-center">
-                  <h6 class="card-title fw-bold text-dark">{{ prod.nombre }}</h6>
-                  <div class="mt-auto">
-                    <p class="text-decoration-line-through text-muted small mb-0">Antes: ${{ prod.precio_base|floatformat:2 }}</p>
-                    <p class="text-danger fs-5 fw-bold mb-2">Ahora: ${{ prod.precio_final|floatformat:2 }}</p>
+    <!-- SECCIONES POR PROMOCIÓN -->
+    {% if promociones_con_productos %}
+      {% for promo in promociones_con_productos %}
+        <div class="mb-5">
+          <h3 class="fw-bold text-dark mb-4 text-uppercase border-bottom pb-2">
+            {{ promo.tipo|title }} 
+          </h3>
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for prod in promo.productos %}
+              <div class="col">
+                <div class="card h-100 shadow-sm border-warning border-1 position-relative">
+                  <span class="badge bg-danger fs-6 card-promo-badge position-absolute top-0 end-0 m-2">{{ prod.descuento_str }}</span>
+                  {% if prod.img %}
+                    <img src="{{ prod.img }}" class="card-img-top product-img" alt="{{ prod.nombre }}" style="height: 180px; object-fit: contain;" />
+                  {% else %}
+                    <div class="bg-secondary-subtle d-flex align-items-center justify-content-center" style="height: 180px;">
+                      <span class="text-muted">Sin Imagen</span>
+                    </div>
+                  {% endif %}
+                  <div class="card-body d-flex flex-column text-center">
+                    <h6 class="card-title fw-bold text-dark">{{ prod.nombre }}</h6>
+                    <div class="mt-auto">
+                      <p class="text-decoration-line-through text-muted small mb-0">Antes: ${{ prod.precio_base|floatformat:2 }}</p>
+                      <p class="text-danger fs-5 fw-bold mb-2">Ahora: ${{ prod.precio_final|floatformat:2 }}</p>
 
-                    {% if esta_autenticado %}
-                      <button class="btn btn-warning btn-sm w-100 fw-semibold">Agregar al Pedido</button>
-                    {% else %}
-                      <a href="{% url 'login' %}" class="btn btn-outline-warning btn-sm w-100 fw-semibold" title="Iniciá sesión para hacer un pedido">Iniciá sesión para pedir</a>
-                    {% endif %}
+                      {% if esta_autenticado %}
+                        <button class="btn btn-warning btn-sm w-100 fw-semibold">Agregar al Pedido</button>
+                      {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-warning btn-sm w-100 fw-semibold" title="Iniciá sesión para hacer un pedido">Iniciá sesión para pedir</a>
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          {% endfor %}
+            {% endfor %}
+          </div>
         </div>
-      </div>
+      {% endfor %}
     {% endif %}
 
     <!-- SECCIÓN 2: Catálogo Completo de Productos -->
@@ -123,6 +127,7 @@
               <div class="card h-100 shadow-sm border-0">
                 {% if prod.en_promocion %}
                   <span class="badge bg-danger position-absolute top-0 end-0 m-2">{{ prod.descuento_str }}</span>
+                  <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 fw-bold">EN PROMOCIÓN</span>
                 {% endif %}
 
                 {% if prod.img %}
@@ -146,9 +151,9 @@
                     {% endif %}
 
                     {% if esta_autenticado %}
-                      <button class="btn btn-warning btn-sm w-100 fw-semibold">Agregar al Pedido</button>
+                      <button class="btn btn-warning btn-sm w-100 fw-semibold" onclick="addToCart({{ prod.id }}, '{{ prod.nombre|escapejs }}', {{ prod.precio_final }}, {{ prod.stock }})"><i class="bi bi-plus-circle me-1"></i> Agregar al Pedido</button>
                     {% else %}
-                      <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm w-100" title="Iniciá sesión para realizar un pedido">Iniciá sesión para comprar</a>
+                      <a href="{% url 'login' %}" class="btn btn-outline-warning btn-sm w-100 fw-semibold">Iniciá sesión para pedir</a>
                     {% endif %}
                   </div>
                 </div>

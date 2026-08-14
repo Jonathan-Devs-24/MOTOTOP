@@ -1,0 +1,149 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  
+  <!-- Banner Institucional -->
+  <div class="card bg-dark text-white border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+    <div class="p-5" style="background: linear-gradient(135deg, #1f1f1f 0%, #292b2c 100%);">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-warning text-dark text-uppercase fw-bold px-3 py-2 mb-3">Distribuidora Mayorista</span>
+          <h1 class="display-5 fw-bold text-white mb-3">DISTRIBUIDORA MOTO-TOP</h1>
+          <p class="fs-5 text-light mb-0">
+            Radicada en la ciudad de <strong>Goya, Corrientes</strong>, somos especialistas en la distribución y comercialización mayorista de repuestos, componentes y accesorios para motocicletas.
+          </p>
+        </div>
+        <div class="col-lg-4 text-center mt-4 mt-lg-0">
+          <img src="{% static 'core/img/logo.png' %}" alt="MOTO-TOP" class="img-fluid" style="max-height: 120px; object-fit: contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información de Expansión y Cobertura Regional -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm rounded-3 p-4 bg-white">
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-warning text-dark p-3 rounded-3 me-3">
+            <i class="bi bi-geo-alt-fill fs-4"></i>
+          </div>
+          <h5 class="fw-bold mb-0 text-dark">Sede Central Goya</h5>
+        </div>
+        <p class="text-muted small mb-0">
+          Atención y venta presencial directa en nuestras oficinas centrales de Goya, con entrega inmediata y gestión integral de pedidos para comercios locales.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm rounded-3 p-4 bg-white">
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-warning text-dark p-3 rounded-3 me-3">
+            <i class="bi bi-map-fill fs-4"></i>
+          </div>
+          <h5 class="fw-bold mb-0 text-dark">Cobertura Regional</h5>
+        </div>
+        <p class="text-muted small mb-0">
+          Red de distribución activa en toda la zona oeste de Corrientes, sur de Misiones, este de Chaco y Formosa, garantizando stock permanente y fletes seguros.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm rounded-3 p-4 bg-white">
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-warning text-dark p-3 rounded-3 me-3">
+            <i class="bi bi-person-badge-fill fs-4"></i>
+          </div>
+          <h5 class="fw-bold mb-0 text-dark">Vendedores en Zona</h5>
+        </div>
+        <p class="text-muted small mb-0">
+          Contamos con agentes comerciales dedicados a visitar talleres y casas de repuestos, acercando listas de precios actualizadas y asesoramiento personalizado.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de Solicitud de Visita de Vendedor -->
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white py-3 px-4 border-bottom border-warning border-3">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-calendar-check-fill text-warning fs-4 me-3"></i>
+            <div>
+              <h4 class="fw-bold mb-0 text-uppercase">Solicitar Visita de un Vendedor</h4>
+              <p class="text-secondary small mb-0">Completá el formulario para que el representante de tu zona se acerque a tu negocio</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5 bg-white">
+          <form method="POST" action="{% url 'empresa' %}">
+            {% csrf_token %}
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="nombre_comercio" class="form-label text-secondary small fw-semibold">Nombre del Taller / Comercio *</label>
+                <input type="text" name="nombre_comercio" id="nombre_comercio" class="form-control" required placeholder="Ej: Motos Goya Repuestos">
+              </div>
+
+              <div class="col-md-6">
+                <label for="contacto" class="form-label text-secondary small fw-semibold">Persona de Contacto *</label>
+                <input type="text" name="contacto" id="contacto" class="form-control" required placeholder="Ej: Carlos Gómez">
+              </div>
+
+              <div class="col-md-6">
+                <label for="telefono" class="form-label text-secondary small fw-semibold">Teléfono / WhatsApp *</label>
+                <input type="text" name="telefono" id="telefono" class="form-control" required placeholder="Ej: +54 3777 123456">
+              </div>
+
+              <div class="col-md-6">
+                <label for="email" class="form-label text-secondary small fw-semibold">Correo Electrónico *</label>
+                <input type="email" name="email" id="email" class="form-control" required placeholder="contacto@taller.com">
+              </div>
+
+              <div class="col-md-6">
+                <label for="localidad" class="form-label text-secondary small fw-semibold">Localidad y Dirección *</label>
+                <input type="text" name="localidad" id="localidad" class="form-control" required placeholder="Ej: Bella Vista - Av. Principal 450">
+              </div>
+
+              <div class="col-md-6">
+                <label for="zona" class="form-label text-secondary small fw-semibold">Zona / Provincia *</label>
+                <select name="zona" id="zona" class="form-select" required>
+                  <option value="" selected disabled>Seleccioná tu zona...</option>
+                  {% if zonas %}
+                    {% for z in zonas %}
+                      <option value="{{ z.id }}">{{ z.nombre }}</option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="Corrientes">Corrientes (Zona Oeste)</option>
+                    <option value="Chaco">Chaco (Este)</option>
+                    <option value="Misiones">Misiones (Sur)</option>
+                    <option value="Formosa">Formosa</option>
+                  {% endif %}
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label for="mensaje" class="form-label text-secondary small fw-semibold">Observaciones / Repuestos de mayor interés</label>
+                <textarea name="mensaje" id="mensaje" rows="3" class="form-control" placeholder="Indicanos qué líneas de productos te interesan o en qué horarios preferís la visita..."></textarea>
+              </div>
+
+              <div class="col-12 mt-4 text-end">
+                <button type="submit" class="btn btn-warning px-4 py-2 fw-bold text-uppercase">
+                  <i class="bi bi-send-fill me-2"></i> Enviar Solicitud
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
