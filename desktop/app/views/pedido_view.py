@@ -3,6 +3,7 @@ import traceback
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QPushButton,
     QScrollArea,
     QMessageBox
@@ -47,6 +48,49 @@ ESTILO_ADMIN_PEDIDOS = """
     QPushButton#btn_nuevo_pedido:pressed {
         background-color: #b71c1c;                 /* Rojo profundo al hacer clic */
     }
+
+    /* Botón Refrescar (Azul para contrastar) */
+    QPushButton#btn_refrescar {
+        background-color: #1976d2;                 /* Azul profesional */
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    QPushButton#btn_refrescar:hover {
+        background-color: #1565c0;                 /* Azul más oscuro al pasar el mouse */
+    }
+
+    QPushButton#btn_refrescar:pressed {
+        background-color: #0d47a1;                 /* Azul profundo al hacer clic */
+    }
+
+    /* Botón Limpiar (Naranja para advertencia) */
+    QPushButton#btn_limpiar {
+        background-color: #f57c00;                 /* Naranja profesional */
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    QPushButton#btn_limpiar:hover {
+        background-color: #e65100;                 /* Naranja más oscuro al pasar el mouse */
+    }
+
+    QPushButton#btn_limpiar:pressed {
+        background-color: #bf360c;                 /* Naranja profundo al hacer clic */
+    }
+
+    /* Contenedor de botones horizontales */
+    QWidget#botones_container {
+        background-color: #f5f6f8;
+    }
 """
 
 
@@ -69,12 +113,35 @@ class PedidoView(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
 
+        # Contenedor de botones horizontales
+        botones_layout = QHBoxLayout()
+        botones_layout.setSpacing(10)
+        
         # Botón Nuevo Pedido configurado con su ID de estilo
         self.btn_new = QPushButton("Nuevo pedido")
         self.btn_new.setObjectName("btn_nuevo_pedido")
-        self.btn_new.setCursor(Qt.CursorShape.PointingHandCursor) # Cambia el cursor a manito
+        self.btn_new.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_new.clicked.connect(self.open_form)
-        layout.addWidget(self.btn_new)
+        botones_layout.addWidget(self.btn_new)
+
+        # Botón Refrescar
+        self.btn_refrescar = QPushButton("Refrescar")
+        self.btn_refrescar.setObjectName("btn_refrescar")
+        self.btn_refrescar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_refrescar.clicked.connect(self.refresh_pedidos)
+        botones_layout.addWidget(self.btn_refrescar)
+
+        # Botón Limpiar Pantalla
+        self.btn_limpiar = QPushButton("Limpiar pantalla")
+        self.btn_limpiar.setObjectName("btn_limpiar")
+        self.btn_limpiar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_limpiar.clicked.connect(self.limpiar_pantalla)
+        botones_layout.addWidget(self.btn_limpiar)
+        
+        # Agregar stretch para que los botones se alineen a la izquierda
+        botones_layout.addStretch()
+        
+        layout.addLayout(botones_layout)
 
         # Configuración del área de Scroll
         self.scroll = QScrollArea()
@@ -158,5 +225,20 @@ class PedidoView(QWidget):
             self.producto_service,
             self.load_data
         )
-        self.form.show()       
+        self.form.show()
+
+    def refresh_pedidos(self):
+        """Recarga la lista de pedidos desde el servidor"""
+        self.load_data()
+
+    def limpiar_pantalla(self):
+        """Limpia todos los pedidos de la pantalla"""
+        while self.list_layout.count():
+            item = self.list_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            else:
+                del item
+        self.list_layout.addStretch()
 

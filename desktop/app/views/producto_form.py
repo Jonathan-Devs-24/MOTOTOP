@@ -1,7 +1,7 @@
 # desktop/app/views/producto_form.py
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton,
-    QListWidget, QLabel, QMessageBox, QListWidgetItem, QFileDialog
+    QListWidget, QLabel, QMessageBox, QListWidgetItem, QFileDialog, QApplication
 )
 from PyQt6.QtCore import Qt
 
@@ -370,6 +370,22 @@ class ProductoForm(QWidget):
     def get_selected_ids(self, list_widget):
         return [item.data(1) for item in list_widget.selectedItems()]
 
+    def refresh_lists(self):
+        self.load_options()
+        QApplication.processEvents()
+        if self.rubros_list.count():
+            self.rubros_list.scrollToBottom()
+        if self.prov_list.count():
+            self.prov_list.scrollToBottom()
+
+    def select_item_by_id(self, list_widget, item_id):
+        for i in range(list_widget.count()):
+            item = list_widget.item(i)
+            if item and item.data(1) == item_id:
+                list_widget.setCurrentItem(item)
+                list_widget.scrollToItem(item)
+                return
+
     # =========================
     # LOGICA OPERATIVA DE RUBROS
     # =========================
@@ -379,9 +395,11 @@ class ProductoForm(QWidget):
             if not nombre:
                 raise ValueError("Nombre obligatorio")
 
-            self.rubro_service.crear({"nombre": nombre})
+            rubro_creado = self.rubro_service.crear({"nombre": nombre})
             self.rubro_input.clear()
-            self.load_options()
+            self.refresh_lists()
+            if rubro_creado.get("id") is not None:
+                self.select_item_by_id(self.rubros_list, rubro_creado["id"])
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
@@ -394,7 +412,7 @@ class ProductoForm(QWidget):
             for item in self.rubros_list.selectedItems():
                 self.rubro_service.eliminar(item.data(1))
 
-            self.load_options()
+            self.refresh_lists()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
@@ -414,14 +432,16 @@ class ProductoForm(QWidget):
             if not data["nombre"]:
                 raise ValueError("Nombre obligatorio")
 
-            self.proveedor_service.crear(data)
+            proveedor_creado = self.proveedor_service.crear(data)
 
             self.prov_nombre.clear()
             self.prov_apellido.clear()
             self.prov_tel.clear()
             self.prov_email.clear()
 
-            self.load_options()
+            self.refresh_lists()
+            if proveedor_creado.get("id") is not None:
+                self.select_item_by_id(self.prov_list, proveedor_creado["id"])
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
@@ -434,7 +454,7 @@ class ProductoForm(QWidget):
             for item in self.prov_list.selectedItems():
                 self.proveedor_service.eliminar(item.data(1))
 
-            self.load_options()
+            self.refresh_lists()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
