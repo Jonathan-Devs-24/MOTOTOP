@@ -119,3 +119,4 @@ STATICFILES_DIRS = [
 
 # Guardar la sesión en cookies firmadas
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+

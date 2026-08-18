@@ -11,5 +11,6 @@ urlpatterns = [
     path('mis-pedidos/', views.mis_pedidos_view, name='mis_pedidos'),
     path('mis-pedidos/<int:pedido_id>/factura/', views.ver_factura_view, name='ver_factura'),
     path('empresa/', views.empresa_view, name='empresa'),
+    path('ai-chat/', views.ai_chat_view, name='ai_chat'),
 ]
 

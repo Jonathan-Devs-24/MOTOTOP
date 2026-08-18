@@ -1,4 +1,5 @@
 # backend/core/urls.py
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import *
 
@@ -19,5 +20,6 @@ router.register(r'users', UserViewSet)
 router.register(r'producto-promociones', ProductoPromocionViewSet)
 router.register(r'informes', InformeViewSet, basename='informes')
 
-urlpatterns = router.urls
-
+urlpatterns = router.urls + [
+    path('ai/chat/', GeminiChatView.as_view(), name='gemini-chat'),
+]

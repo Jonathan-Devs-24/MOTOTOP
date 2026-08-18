@@ -16,6 +16,9 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
+# GEMINI_API_KEY is used for accessing the Gemini API. It should be set in the .env file.
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 MEDIA_URL = '/media/'
@@ -154,3 +157,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=40),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+
+
+
+

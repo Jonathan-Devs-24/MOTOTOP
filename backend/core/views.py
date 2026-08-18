@@ -16,6 +16,13 @@ from django.db.models import Sum, F, Q, Value, DecimalField, IntegerField
 from django.db.models.functions import Coalesce
 from datetime import datetime
 
+from rest_framework.views import APIView
+from .ai_service import GeminiAssistantService
+
+# "#############################################"
+from rest_framework.permissions import AllowAny
+from .serializers import GeminiChatSerializer
+
 
 class PedidoViewSet(viewsets.ModelViewSet):
 
@@ -379,3 +386,32 @@ class InformeViewSet(viewsets.ViewSet):
         ]
         return Response(data)
     
+
+
+class GeminiChatView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = GeminiChatSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        prompt = serializer.validated_data.get('prompt')
+
+        try:
+            servicio = GeminiAssistantService()
+            respuesta = servicio.responder(prompt)
+            return Response({'respuesta': respuesta}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"\n[ERROR EN VISTA GEMINI]: {e}\n")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+            
+            
+            
+            
+
+           

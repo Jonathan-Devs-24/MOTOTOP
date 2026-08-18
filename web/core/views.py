@@ -492,3 +492,46 @@ def empresa_view(request):
     return render(request, 'core/empresa.html', context)
 
 
+
+@require_POST
+def ai_chat_view(request):
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        prompt = body.get('prompt', '').strip()
+
+        if not prompt:
+            return JsonResponse({'error': 'El mensaje no puede estar vacío.'}, status=400)
+
+        # Construir endpoint limpio a la API
+        base_api = settings.API_BASE_URL.rstrip('/')
+        if not base_api.endswith('/api'):
+            endpoint = f"{base_api}/api/ai/chat/"
+        else:
+            endpoint = f"{base_api}/ai/chat/"
+
+        headers = {'Content-Type': 'application/json'}
+        token = request.session.get('access_token')
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        res = requests.post(
+            endpoint,
+            json={'prompt': prompt},
+            headers=headers,
+            timeout=25
+        )
+
+        data = res.json()
+        if res.status_code == 200:
+            return JsonResponse({'respuesta': data.get('respuesta', '')})
+        else:
+            return JsonResponse({'error': data.get('error', 'Error al consultar la API.')}, status=res.status_code)
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Error de comunicación con la API: {str(e)}'}, status=503)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    
+    
+    

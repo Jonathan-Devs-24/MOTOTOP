@@ -10,6 +10,9 @@ from django.db import transaction
 from django.db.models import Sum
 from django.contrib.auth.models import User
 
+
+
+
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
@@ -412,5 +415,11 @@ class UserWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+    
+    
+# GeminiChatSerializer
+
+class GeminiChatSerializer(serializers.Serializer):
+    prompt = serializers.CharField(max_length=1000, required=True)
     
     
